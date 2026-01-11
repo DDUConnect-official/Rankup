@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+html,
+body,
+#root {
+  background-color: #000;
+  min-height: 100%;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+button {
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.35s ease-in;
+}
+
+@keyframes swipeHint {
+  0% {
+    transform: translateX(0);
+  }
+
+  50% {
+    transform: translateX(5px);
+  }
+
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.animate-swipeHint {
+  animation: swipeHint 1.6s ease-in-out infinite;
+}
