@@ -7,6 +7,8 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "swiper/css/effect-coverflow";
 import { EffectCoverflow } from "swiper/modules";
+import RankUpLogo from "../assets/RankUp_Logo.png";
+import Loader from "../components/Loader";
 
 const ProfileSetup = () => {
   const { state } = useLocation();
@@ -276,7 +278,9 @@ const ProfileSetup = () => {
             <div className="mt-3 transition-all duration-300 linear animate-fadeIn">
 
               <div className="mb-6 px-5 md:px-8">
-                <h3 className="text-lg font-semibold">Pick Your RankUp Persona</h3>
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  Pick Up Your Persona
+                </h3>
                 <p className="text-sm text-white/60">
                   Your Persona shows your vibe to others.
                 </p>
@@ -428,6 +432,7 @@ const ProfileSetup = () => {
 
         </form>
       </div>
+      {loading && <Loader text="Setting up Profile..." fullScreen />}
     </div>
   );
 };

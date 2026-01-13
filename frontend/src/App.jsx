@@ -10,19 +10,14 @@ import { useAuth } from "./context/AuthContext";
 import AuthLayout from "./layouts/AuthLayout";
 import ProfileLayout from "./layouts/ProfileLayout";
 
+import Loader from "./components/Loader";
+
 function App() {
   const { loading } = useAuth();
 
   // Show loading screen while Firebase determines auth state
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-black">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-[#430abd] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-white/70 text-lg">Loading...</p>
-        </div>
-      </div>
-    );
+    return <Loader text="Starting RankUp..." fullScreen />;
   }
 
   return (

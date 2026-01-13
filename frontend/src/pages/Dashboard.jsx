@@ -11,7 +11,9 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import GoogleIcon from "../assets/google.png";
+import RankUpLogo from "../assets/RankUp_Logo.png";
 import toast from "react-hot-toast";
+import Loader from "../components/Loader";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -110,8 +112,9 @@ const Dashboard = () => {
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-[#9d50bb]/10 blur-[120px] rounded-full"></div>
 
       <div className="w-full max-w-2xl bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl relative z-10">
-        <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-[#430abd] to-[#9d50bb] bg-clip-text text-transparent">
-          Welcome to RankUp
+        <h1 className="text-4xl font-bold mb-2 flex items-center justify-center gap-3">
+          <span className="bg-gradient-to-r from-[#430abd] to-[#9d50bb] bg-clip-text text-transparent">Welcome to</span>
+          <img src={RankUpLogo} alt="RankUp" className="h-24" />
         </h1>
         <p className="text-white/60 mb-8 border-b border-white/10 pb-4 text-lg">
           Hello, {user?.displayName || user?.email || "User"}! You've successfully completed the auth flow.
@@ -228,9 +231,10 @@ const Dashboard = () => {
         </div>
       )}
 
-      <p className="mt-8 text-white/30 text-sm">
-        RankUp © 2026 • Coding Practice Platforom
-      </p>
+      <div className="mt-8 flex items-center justify-center gap-2 text-white/30 text-sm">
+        <img src={RankUpLogo} alt="RankUp" className="h-6 opacity-50" /> © 2026 • Coding Practice Platform
+      </div>
+      {deleting && <Loader text="Deleting Account..." fullScreen />}
     </div>
   );
 };

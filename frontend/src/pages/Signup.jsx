@@ -9,6 +9,7 @@ import {
 import { auth } from "../firebase";
 import { useNavigate, Link } from "react-router-dom";
 import GoogleIcon from "../assets/google.png";
+import RankUpLogo from "../assets/RankUp_Logo.png";
 import DarkVeil from "../components/DarkVeil";
 import { useAuth } from "../context/AuthContext";
 import toast, { Toaster } from "react-hot-toast";
@@ -16,6 +17,7 @@ import {
   GoogleReCaptchaProvider,
   useGoogleReCaptcha,
 } from "react-google-recaptcha-v3";
+import Loader from "../components/Loader";
 
 const SignupForm = () => {
   const navigate = useNavigate();
@@ -186,6 +188,9 @@ const SignupForm = () => {
     <div className="w-full overflow-x-hidden">
       <div className="absolute inset-0 flex items-center justify-center px-4">
         <div className="w-full max-w-md rounded-xl p-6 backdrop-blur-xl border border-white/10 shadow-2xl md:p-8">
+          <div className="flex justify-center">
+            <img src={RankUpLogo} alt="RankUp" className="h-20 md:h-22" />
+          </div>
           <h2 className="text-3xl font-bold text-white mb-6 text-center">
             Create Account
           </h2>
@@ -237,7 +242,7 @@ const SignupForm = () => {
               disabled={loading}
               className="w-full cursor-pointer bg-[#430abd] text-white py-3 rounded-lg font-bold transition active:scale-[1.02] disabled:opacity-50"
             >
-              {loading ? "Signing up..." : "Sign Up"}
+              Sign Up
             </button>
           </form>
 
@@ -249,6 +254,7 @@ const SignupForm = () => {
           </p>
         </div>
       </div>
+      {loading && <Loader text="Creating Account..." fullScreen />}
     </div>
   );
 };

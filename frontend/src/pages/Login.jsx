@@ -12,12 +12,14 @@ import {
 import { auth } from "../firebase";
 import { useNavigate, Link } from "react-router-dom";
 import GoogleIcon from "../assets/google.png";
+import RankUpLogo from "../assets/RankUp_Logo.png";
 import { useAuth } from "../context/AuthContext";
 import toast, { Toaster } from "react-hot-toast";
 import {
   GoogleReCaptchaProvider,
   useGoogleReCaptcha,
 } from "react-google-recaptcha-v3";
+import Loader from "../components/Loader";
 
 const LoginForm = () => {
   const navigate = useNavigate();
@@ -181,7 +183,12 @@ const LoginForm = () => {
     <div className="w-full h-screen overflow-x-hidden">
       <div className="absolute top-0 left-0 mx-auto min-h-screen w-full flex items-center justify-center px-4">
         <div className="w-full max-w-md rounded-xl shadow-6xl p-6 backdrop-blur-xl border border-white/10 md:p-8">
-          <h2 className="text-3xl font-bold text-white mb-6 text-center">Login to RankUp</h2>
+          <div className="flex justify-center">
+            <img src={RankUpLogo} alt="RankUp" className="h-20 md:h-22" />
+          </div>
+          <h2 className="text-3xl font-bold text-white mb-6 text-center">
+            Login Your Account
+          </h2>
 
           <button
             onClick={handleGoogleLogin}
@@ -240,7 +247,7 @@ const LoginForm = () => {
               disabled={loading}
               className="cursor-pointer w-full bg-[#430abd] active:scale-[0.98] text-white py-3 rounded-lg font-bold transition disabled:opacity-50"
             >
-              {loading ? "Processing..." : "Login"}
+              Login
             </button>
           </form>
           <p className="mt-6 text-center text-sm text-gray-400">
@@ -251,6 +258,7 @@ const LoginForm = () => {
           </p>
         </div>
       </div>
+      {loading && <Loader text="Logging you in..." fullScreen />}
     </div>
   );
 };
