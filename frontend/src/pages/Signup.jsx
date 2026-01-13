@@ -122,12 +122,14 @@ const SignupForm = () => {
   };
 
   const handleGoogleSignup = async () => {
+    setLoading(true);
     if (!executeRecaptcha) {
       toast.dismiss();
       toast.error("ReCAPTCHA not initialized. Please try again later.", {
         duration: 3000,
         position: "top-right",
       });
+      setLoading(false);
       return;
     }
 
@@ -151,6 +153,7 @@ const SignupForm = () => {
           duration: 3000,
           position: "top-right",
         });
+        setLoading(false);
         return;
       }
 
@@ -181,6 +184,7 @@ const SignupForm = () => {
         duration: 3000,
         position: "top-right",
       });
+      setLoading(false);
     }
   };
 

@@ -6,7 +6,7 @@ const AuthLayout = () => {
     <div className="min-h-screen w-full relative overflow-hidden bg-black">
       <DarkVeil
         hueShift={0}       // Blue theme
-        speed={0.5}
+        speed={1.6}
         noiseIntensity={0}
         scanlineIntensity={0}
         warpAmount={0}

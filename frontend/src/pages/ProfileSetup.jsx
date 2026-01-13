@@ -110,6 +110,8 @@ const ProfileSetup = () => {
       return toast.error("All fields are required!");
     }
 
+    setLoading(true);
+
     try {
       const response = await fetch(`${backendUrl}/api/users/setup-profile`, {
         method: "POST",
@@ -130,6 +132,8 @@ const ProfileSetup = () => {
       }
     } catch {
       toast.error("Network error. Please check backend.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -322,14 +326,10 @@ const ProfileSetup = () => {
                       className="flex justify-center overflow-visible"
                     >
                       <div className="flex flex-col items-center text-center overflow-visible">
-
-                        <img
+                        <AvatarImage
                           src={avatar.url}
                           alt={avatar.name}
-                          className={`w-[260px] md:w-[340px] transition-all duration-300 select-none pointer-events-none ${activeIndex === index
-                            ? "scale-100 opacity-100"
-                            : "scale-80 opacity-40"
-                            }`}
+                          isActive={activeIndex === index}
                         />
 
                         <h3 className="mt-4 text-lg font-semibold">
@@ -433,6 +433,29 @@ const ProfileSetup = () => {
         </form>
       </div>
       {loading && <Loader text="Setting up Profile..." fullScreen />}
+    </div>
+  );
+};
+
+const AvatarImage = ({ src, alt, isActive }) => {
+  const [loaded, setLoaded] = useState(false);
+
+  return (
+    <div className={`relative w-[260px] md:w-[340px] aspect-square transition-all duration-300 ${isActive ? "scale-100 opacity-100" : "scale-80 opacity-40"}`}>
+      {/* Skeleton / Loading State */}
+      {!loaded && (
+        <div className="absolute inset-0 bg-white/10 rounded-full animate-pulse flex items-center justify-center">
+          <div className="w-16 h-16 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
+        </div>
+      )}
+
+      {/* Actual Image */}
+      <img
+        src={src}
+        alt={alt}
+        onLoad={() => setLoaded(true)}
+        className={`w-full h-full object-contain select-none pointer-events-none transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
+      />
     </div>
   );
 };

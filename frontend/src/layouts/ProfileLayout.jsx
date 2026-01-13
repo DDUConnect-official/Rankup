@@ -6,7 +6,7 @@ const ProfileLayout = () => {
     <div className="min-h-screen w-full relative overflow-hidden bg-black">
       <DarkVeil
         hueShift={48}        
-        speed={0.5}
+        speed={1.6}
         noiseIntensity={0}
         scanlineIntensity={0}
         scanlineFrequency={0}

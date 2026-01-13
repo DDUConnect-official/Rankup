@@ -117,6 +117,7 @@ const LoginForm = () => {
           duration: 3000,
           position: "top-right",
         });
+        setLoading(false);
         return;
       }
 
