@@ -92,3 +92,139 @@ button {
     background-position: top, top, left, right, bottom
   }
 }
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-150%) skewX(-40deg);
+  }
+
+  100% {
+    transform: translateX(450%) skewX(-40deg);
+  }
+}
+
+.shine-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(to right,
+      transparent 0%,
+      rgba(255, 255, 255, 0.116) 50%,
+      transparent 100%);
+  transform: skewX(-20deg);
+}
+
+.shine-effect {
+  animation: shimmer 5s infinite;
+}
+
+.mask-border {
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  padding: 1.5px !important;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float 6s ease-in-out 3s infinite;
+}
+
+@keyframes text-shine {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  100% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-text-shine {
+  background-size: 200% auto;
+  animation: text-shine 3s linear infinite;
+}
+
+@keyframes sparkle-rise {
+  0% {
+    transform: translateY(0) scale(0.5);
+    opacity: 0;
+  }
+
+  20% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(-250px) scale(0);
+    opacity: 0;
+  }
+}
+
+@keyframes sparkle-lateral {
+  0% {
+    transform: translateX(0) scale(0.5);
+    opacity: 0;
+  }
+
+  20% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateX(-250px) scale(0);
+    opacity: 0;
+  }
+}
+
+.animate-sparkle-lateral {
+  position: absolute;
+  right: 0;
+  border-radius: 50%;
+  animation: sparkle-lateral ease-out infinite;
+  filter: blur(1px);
+}
+
+.animate-sparkle {
+  position: absolute;
+  bottom: 0;
+  border-radius: 50%;
+  animation: sparkle-rise ease-out infinite backwards;
+  filter: blur(1px);
+}
+
+@keyframes slideUpFade {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slideUpFade {
+  animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}

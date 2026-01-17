@@ -9,8 +9,10 @@ import { useAuth } from "./context/AuthContext";
 
 import AuthLayout from "./layouts/AuthLayout";
 import ProfileLayout from "./layouts/ProfileLayout";
-
+import DashboardLayout from "./layouts/DashboardLayout";
 import Loader from "./components/Loader";
+
+// ... existing imports
 
 function App() {
   const { loading } = useAuth();
@@ -44,15 +46,16 @@ function App() {
           <Route path="/profile-setup" element={<ProfileSetup />} />
         </Route>
 
-        {/* -------- Dashboard (no DarkVeil or later custom) -------- */}
+        {/* -------- Dashboard (Hue 225) -------- */}
         <Route
-          path="/dashboard"
           element={
             <ProtectedRoute>
-              <Dashboard />
+              <DashboardLayout />
             </ProtectedRoute>
           }
-        />
+        >
+          <Route path="/dashboard" element={<Dashboard />} />
+        </Route>
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
