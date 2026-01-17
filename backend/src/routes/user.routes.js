@@ -64,6 +64,23 @@ router.post("/setup-profile", async (req, res) => {
     }
 });
 
+// PATCH: Mark welcome guide as completed
+router.patch("/welcome-guide-complete/:uid", async (req, res) => {
+    try {
+        const user = await User.findOneAndUpdate(
+            { uid: req.params.uid },
+            { hasSeenWelcomeGuide: true },
+            { new: true }
+        );
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        res.status(200).json({ message: "Welcome guide marked as completed", user });
+    } catch (error) {
+        res.status(500).json({ message: "Error updating welcome guide status" });
+    }
+});
+
 // DELETE: Delete user profile from MongoDB
 router.delete("/delete-account/:uid", async (req, res) => {
     try {

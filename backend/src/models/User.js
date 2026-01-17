@@ -19,6 +19,7 @@ const userSchema = new mongoose.Schema({
   attemptedProblemsCount: { type: Number, default: 0 },
   solvedProblemsCount: { type: Number, default: 0 },
   profileCompleted: { type: Boolean, default: false },
+  hasSeenWelcomeGuide: { type: Boolean, default: false },
   attemptedProblems: [attemptedProblemSchema] // One-to-many relationship
 }, { timestamps: true });
 
