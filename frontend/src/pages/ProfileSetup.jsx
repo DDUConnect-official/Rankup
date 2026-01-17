@@ -288,7 +288,7 @@ const ProfileSetup = () => {
 
                   <div className="flex items-center justify-between mt-3 px-1">
                     <p className="text-xs text-white/40 flex items-center gap-1 animate-swipeHint">
-                      Swipe to explore more personas <span>→</span>
+                      Swipe to explore more<span>→</span>
                     </p>
 
                     <div className="flex items-center gap-3">
