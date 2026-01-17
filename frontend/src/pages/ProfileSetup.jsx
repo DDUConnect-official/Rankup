@@ -22,6 +22,7 @@ const ProfileSetup = () => {
   const [hideHint, setHideHint] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [gender, setGender] = useState("male"); // 'male' | 'female'
 
   const [formData, setFormData] = useState({
     username: "",
@@ -37,20 +38,54 @@ const ProfileSetup = () => {
       url: "https://res.cloudinary.com/dgbsqglrc/image/upload/v1767764696/Male_Avatar1-removebg_tjmzvz.png",
       name: "The Listener",
       desc: "Calm, focused, always learning",
+      gender: "male",
     },
     {
       id: "m2",
       url: "https://res.cloudinary.com/dgbsqglrc/image/upload/v1767765052/Male_Avatar2-removebg_rlyw2q.png",
       name: "The Hustler",
       desc: "Always grinding, no excuses",
+      gender: "male",
     },
     {
       id: "m3",
       url: "https://res.cloudinary.com/dgbsqglrc/image/upload/v1767765195/Male_Avatar3-removebg_cmvo6m.png",
       name: "The Leader",
       desc: "Confident, sharp and bold",
+      gender: "male",
+    },
+    {
+      id: "f1",
+      url: "https://res.cloudinary.com/dksb0nx42/image/upload/v1768646368/F1_raqn0h.png",
+      name: "The Visionary",
+      desc: "Seeing beyond the horizon",
+      gender: "female",
+    },
+    {
+      id: "f2",
+      url: "https://res.cloudinary.com/dksb0nx42/image/upload/v1768646368/F2_haz4dl.png",
+      name: "The Creator",
+      desc: "Building dreams into reality",
+      gender: "female",
+    },
+    {
+      id: "f3",
+      url: "https://res.cloudinary.com/dksb0nx42/image/upload/v1768646368/F3_b42kgg.png",
+      name: "The Strategist",
+      desc: "Always two steps ahead",
+      gender: "female",
+    },
+    {
+      id: "f4",
+      url: "https://res.cloudinary.com/dksb0nx42/image/upload/v1768646368/F4_qknr5f.png",
+      name: "The Achiever",
+      desc: "Goals are just milestones",
+      gender: "female",
     },
   ];
+
+  // Derive the list based on selected gender
+  const filteredAvatars = avatarList.filter((avatar) => avatar.gender === gender);
 
   const handleLogoutConfirm = async () => {
     try {
@@ -82,11 +117,13 @@ const ProfileSetup = () => {
     checkExistingProfile();
   }, [backendUrl, navigate, state?.email]);
 
-  /* ✅ auto select first avatar */
+  /* ✅ auto select first avatar when gender or list changes */
   useEffect(() => {
     setActiveIndex(0);
-    setFormData((prev) => ({ ...prev, avatar: avatarList[0].url }));
-  }, []);
+    if (filteredAvatars.length > 0) {
+      setFormData((prev) => ({ ...prev, avatar: filteredAvatars[0].url }));
+    }
+  }, [gender]);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -98,7 +135,9 @@ const ProfileSetup = () => {
 
   const handleSlideChange = (index) => {
     setActiveIndex(index);
-    setFormData((prev) => ({ ...prev, avatar: avatarList[index].url }));
+    if (filteredAvatars[index]) {
+      setFormData((prev) => ({ ...prev, avatar: filteredAvatars[index].url }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -288,27 +327,55 @@ const ProfileSetup = () => {
                 <p className="text-sm text-white/60">
                   Your Persona shows your vibe to others.
                 </p>
-                <p
-                  className={`mt-1.5 md:mt-2 text-xs text-white/40 flex items-center gap-1 animate-swipeHint transition-opacity duration-400`}
-                >
-                  Swipe to explore personas <span>→</span>
-                </p>
+
+                <div className="flex items-center justify-between mt-3 px-1">
+                  <p className="text-xs text-white/40 flex items-center gap-1 animate-swipeHint">
+                    Swipe to explore more personas <span>→</span>
+                  </p>
+
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={`cursor-pointer transition-colors ${gender === "male" ? "text-[#00e5ff] drop-shadow-[0_0_5px_rgba(0,229,255,0.5)]" : "text-white/20 hover:text-white/50"}`}
+                      onClick={() => setGender("male")}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 3h5v5" /><path d="M21 3 13.5 10.5" /><circle cx="10" cy="14" r="5" /></svg>
+                    </span>
+
+                    <div className="relative w-12 h-6 bg-white/10 rounded-full p-0.5 cursor-pointer flex items-center" onClick={() => setGender(gender === "male" ? "female" : "male")}>
+                      <div
+                        className={`w-5 h-5 bg-[#006369] rounded-full shadow-md transform transition-all duration-300 flex items-center justify-center ${gender === "male" ? "translate-x-0" : "translate-x-6"
+                          }`}
+                      >
+                        <div className="w-1.5 h-1.5 bg-white rounded-full opacity-80" />
+                      </div>
+                    </div>
+
+                    <span
+                      className={`cursor-pointer transition-colors ${gender === "female" ? "text-[#ff4081] drop-shadow-[0_0_5px_rgba(255,64,129,0.5)]" : "text-white/20 hover:text-white/50"}`}
+                      onClick={() => setGender("female")}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 15v7" /><path d="M9 19h6" /><circle cx="12" cy="10" r="5" /></svg>
+                    </span>
+                  </div>
+                </div>
               </div>
 
               {/* Swiper */}
               <div className="relative w-full overflow-visible">
+                {/* Updated Swiper Key to force re-render on gender change */}
                 <Swiper
-                  initialSlide={activeIndex}
+                  key={gender}
+                  initialSlide={0}
                   modules={[EffectCoverflow]}
                   effect="coverflow"
                   centeredSlides
                   slidesPerView={1}
                   grabCursor
                   onSlideChange={(swiper) => {
-                    handleSlideChange(swiper.activeIndex)
+                    handleSlideChange(swiper.activeIndex);
                     if (!hasSwiped) {
                       setHasSwiped(true);
-                      setTimeout(() => setHideHint(true), 400); // wait for fade
+                      setTimeout(() => setHideHint(true), 400);
                     }
                   }}
                   coverflowEffect={{
@@ -320,7 +387,7 @@ const ProfileSetup = () => {
                   }}
                   className="w-full overflow-visible"
                 >
-                  {avatarList.map((avatar, index) => (
+                  {filteredAvatars.map((avatar, index) => (
                     <SwiperSlide
                       key={avatar.id}
                       className="flex justify-center overflow-visible"
