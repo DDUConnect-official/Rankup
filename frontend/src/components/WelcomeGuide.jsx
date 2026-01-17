@@ -37,9 +37,11 @@ const WelcomeGuide = ({ onComplete }) => {
     };
 
     const handleComplete = async () => {
+        const backendUrl = import.meta.env.VITE_BACKEND_URL;
+
         try {
             const response = await fetch(
-                `http://localhost:5000/api/users/welcome-guide-complete/${user.uid}`,
+                `${backendUrl}/api/users/welcome-guide-complete/${user.uid}`,
                 {
                     method: "PATCH",
                     headers: {
