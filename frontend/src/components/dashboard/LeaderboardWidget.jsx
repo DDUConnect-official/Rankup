@@ -1,7 +1,22 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Crown } from "lucide-react";
+import { avatarList } from "../../constants/avatars";
 
 const LeaderboardWidget = ({ profileData }) => {
+    // Get random avatars that are NOT the current user's avatar
+    const randomAvatars = useMemo(() => {
+        if (!profileData?.avatar) return [];
+
+        // Filter out the current user's avatar
+        const available = avatarList.filter(a => a.url !== profileData.avatar);
+
+        // Shuffle and pick 2
+        return available.sort(() => 0.5 - Math.random()).slice(0, 2);
+    }, [profileData?.avatar]);
+
+    const rank2 = randomAvatars[0] || avatarList[0];
+    const rank3 = randomAvatars[1] || avatarList[1];
+
     return (
         <div className="relative group cursor-pointer w-full md:w-auto rounded-2xl overflow-hidden transition-all hover:scale-[1.01]">
 
@@ -17,7 +32,7 @@ const LeaderboardWidget = ({ profileData }) => {
                 <div className="flex items-center -space-x-3 pl-2 pt-3">
                     {/* Rank 2 */}
                     <div className="relative z-10 w-10 h-10 rounded-full border-2 border-[#121212] bg-slate-800 flex items-center justify-center overflow-hidden">
-                        <img src="https://res.cloudinary.com/dgbsqglrc/image/upload/v1767764696/Male_Avatar1-removebg_tjmzvz.png" alt="Rank 2" className="w-full h-full object-cover" />
+                        <img src={rank2.url} alt="Rank 2" className="w-full h-full object-cover" />
                     </div>
 
                     {/* Rank 1 */}
@@ -28,7 +43,7 @@ const LeaderboardWidget = ({ profileData }) => {
 
                     {/* Rank 3 */}
                     <div className="relative z-0 w-10 h-10 rounded-full border-2 border-[#121212] bg-orange-950 flex items-center justify-center overflow-hidden">
-                        <img src="https://res.cloudinary.com/dgbsqglrc/image/upload/v1767765195/Male_Avatar3-removebg_cmvo6m.png" alt="Rank 3" className="w-full h-full object-cover" />
+                        <img src={rank3.url} alt="Rank 3" className="w-full h-full object-cover" />
                     </div>
                 </div>
 

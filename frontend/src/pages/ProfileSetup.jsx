@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { avatarList } from "../constants/avatars";
 import { useLocation, useNavigate } from "react-router-dom";
 import { auth } from "../firebase";
 import { signOut } from "firebase/auth";
@@ -34,57 +35,7 @@ const ProfileSetup = () => {
     aboutMe: "",
   });
 
-  const avatarList = [
-    {
-      id: "m1",
-      url: "https://res.cloudinary.com/dgbsqglrc/image/upload/v1767764696/Male_Avatar1-removebg_tjmzvz.png",
-      name: "The Listener",
-      desc: "Calm, focused, always learning",
-      gender: "male",
-    },
-    {
-      id: "m2",
-      url: "https://res.cloudinary.com/dgbsqglrc/image/upload/v1767765052/Male_Avatar2-removebg_rlyw2q.png",
-      name: "The Hustler",
-      desc: "Always grinding, no excuses",
-      gender: "male",
-    },
-    {
-      id: "m3",
-      url: "https://res.cloudinary.com/dgbsqglrc/image/upload/v1767765195/Male_Avatar3-removebg_cmvo6m.png",
-      name: "The Leader",
-      desc: "Confident, sharp and bold",
-      gender: "male",
-    },
-    {
-      id: "f1",
-      url: "https://res.cloudinary.com/dksb0nx42/image/upload/v1768646368/F1_raqn0h.png",
-      name: "The Visionary",
-      desc: "Seeing beyond the horizon",
-      gender: "female",
-    },
-    {
-      id: "f2",
-      url: "https://res.cloudinary.com/dksb0nx42/image/upload/v1768646368/F2_haz4dl.png",
-      name: "The Creator",
-      desc: "Building dreams into reality",
-      gender: "female",
-    },
-    {
-      id: "f3",
-      url: "https://res.cloudinary.com/dksb0nx42/image/upload/v1768646368/F3_b42kgg.png",
-      name: "The Strategist",
-      desc: "Always two steps ahead",
-      gender: "female",
-    },
-    {
-      id: "f4",
-      url: "https://res.cloudinary.com/dksb0nx42/image/upload/v1768646368/F4_qknr5f.png",
-      name: "The Achiever",
-      desc: "Goals are just milestones",
-      gender: "female",
-    },
-  ];
+
 
   // Derive the list based on selected gender
   const filteredAvatars = avatarList.filter((avatar) => avatar.gender === gender);
