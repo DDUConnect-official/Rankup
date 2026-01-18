@@ -2,7 +2,7 @@ import React from 'react'
 
 const Loader = ({ text = "Ranking You Up...", fullScreen = true }) => {
     const containerClasses = fullScreen
-        ? "fixed inset-0 z-50 flex flex-col items-center justify-center bg-black"
+        ? "fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black/90 backdrop-blur-md"
         : "flex flex-col items-center justify-center bg-black p-10";
 
     return (

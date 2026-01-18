@@ -224,7 +224,7 @@ const ProfileDetails = () => {
                                 disabled={loading || !hasChanges}
                                 className="flex items-center gap-2 px-3 py-2 md:px-5 md:py-2.5 bg-black/40 border border-white/10 rounded-md md:rounded-xl transition-all duration-300 group cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                             >
-                                {loading ? <Loader text="" size="small" /> : <><Save className={`w-4 h-4 ${hasChanges ? "text-green-400" : "text-white/20"}`} /> <span className={`font-['Space_Grotesk'] font-bold text-xs md:text-sm tracking-wider ${hasChanges ? "text-green-100" : "text-white/20"}`}>SAVE</span></>}
+                                <Save className={`w-4 h-4 ${hasChanges ? "text-green-400" : "text-white/20"}`} /> <span className={`font-['Space_Grotesk'] font-bold text-xs md:text-sm tracking-wider ${hasChanges ? "text-green-100" : "text-white/20"}`}>SAVE</span>
                             </button>
                         </div>
                     )}
@@ -557,7 +557,7 @@ const ProfileDetails = () => {
             )}
 
             {deleting && <Loader text="DELETING ACCOUNT..." fullScreen />}
-            {loading && !isEditing && <Loader text="EDITING YOUR PROFILE..." fullScreen />}
+            {loading && <Loader text="EDITING YOUR PROFILE..." fullScreen />}
         </div>
     );
 };
