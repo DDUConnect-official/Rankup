@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
 import RankUpLogo from "../assets/RankUp_Logo.png";
+import { useNavigate } from "react-router-dom";
 
 const Navbar = ({ avatar, onLogout, onDelete }) => {
     const [showDropdown, setShowDropdown] = useState(false);
     const dropdownRef = useRef(null);
+    const navigate = useNavigate();
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -50,6 +52,15 @@ const Navbar = ({ avatar, onLogout, onDelete }) => {
                     {showDropdown && (
                         <div className="absolute right-0 top-14 w-48 bg-[#121212] backdrop-blur-2xl shadow-3xl border border-white/10 rounded-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
                             <div className="py-2">
+                                <button
+                                    onClick={() => {
+                                        setShowDropdown(false);
+                                        navigate("/profile");
+                                    }}
+                                    className="w-full text-left px-4 py-2 text-sm text-white/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+                                >
+                                    My Profile
+                                </button>
                                 <button
                                     onClick={() => {
                                         setShowDropdown(false);
