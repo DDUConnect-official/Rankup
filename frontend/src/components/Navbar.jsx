@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
 import RankUpLogo from "../assets/RankUp_Logo.png";
+import { useNavigate } from "react-router-dom";
 
 const Navbar = ({ avatar, onLogout, onDelete }) => {
     const [showDropdown, setShowDropdown] = useState(false);
     const dropdownRef = useRef(null);
+    const navigate = useNavigate();
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -48,25 +50,16 @@ const Navbar = ({ avatar, onLogout, onDelete }) => {
 
                     {/* Dropdown Menu */}
                     {showDropdown && (
-                        <div className="absolute right-0 top-14 w-48 bg-[#121212] backdrop-blur-2xl shadow-3xl border border-white/10 rounded-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                            <div className="py-2">
+                        <div className="absolute right-0 top-14 w-fit min-w-[100px] bg-black/80 backdrop-blur-xl shadow-2xl border border-white/20 rounded-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                            <div className="py-1">
                                 <button
                                     onClick={() => {
                                         setShowDropdown(false);
-                                        onLogout();
+                                        navigate("/profile");
                                     }}
-                                    className="w-full text-left px-4 py-2 text-sm text-white/80 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+                                    className="w-full text-center px-6 py-3 text-sm font-medium text-white/80 cursor-pointer whitespace-nowrap"
                                 >
-                                    Logout
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        setShowDropdown(false);
-                                        onDelete();
-                                    }}
-                                    className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors cursor-pointer border-t border-white/5 mt-1 pt-3"
-                                >
-                                    Delete Account
+                                    My Profile
                                 </button>
                             </div>
                         </div>

@@ -79,10 +79,10 @@ const Dashboard = () => {
       {showWelcomeGuide && <WelcomeGuide onComplete={handleWelcomeGuideComplete} />}
 
       {/* Dashboard Content */}
-      <div className="w-full max-w-7xl mx-auto flex flex-col items-center justify-start p-2 md:p-8">
+      <div className="w-full max-w-7xl mx-auto flex flex-col items-center justify-start md:p-2 animate-slideUpFade">
 
         {/* Glass Container */}
-        <div className="w-full p-6 md:p-10 rounded-3xl border border-white/10 backdrop-blur-2xl shadow-xl">
+        <div className="w-full p-6 md:p-10 rounded-xl border border-white/10 backdrop-blur-2xl shadow-xl">
 
           {/* Header Section: Welcome + Leaderboard Widget */}
           <div className="w-full flex flex-col items-center gap-6 mb-6 md:mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700 md:flex-row md:items-end md:justify-between">
