@@ -10,6 +10,7 @@ const attemptedProblemSchema = new mongoose.Schema({
 const userSchema = new mongoose.Schema({
   uid: { type: String, required: true, unique: true }, // Your firebaseUid
   email: { type: String, required: true, unique: true },
+  role: { type: String, enum: ["admin", "student"], default: "student" },
   username: { type: String, unique: true, sparse: true }, // Sparse allows nulls until setup
   avatar: { type: String },
   branch: { type: String },
