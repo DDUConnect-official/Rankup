@@ -59,8 +59,6 @@ function App() {
           <Route path="/profile" element={<ProfileDetails />} />
         </Route>
 
-        {/* -------- Admin Panel (Dark Mode) -------- */}
-
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
