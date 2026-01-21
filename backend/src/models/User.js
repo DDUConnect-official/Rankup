@@ -20,6 +20,7 @@ const userSchema = new mongoose.Schema({
   solvedProblemsCount: { type: Number, default: 0 },
   profileCompleted: { type: Boolean, default: false },
   hasSeenWelcomeGuide: { type: Boolean, default: false },
+  role: { type: String, enum: ["admin", "student"], default: "student" },
   attemptedProblems: [attemptedProblemSchema] // One-to-many relationship
 }, { timestamps: true });
 

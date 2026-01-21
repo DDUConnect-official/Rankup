@@ -4,6 +4,7 @@ import RankUpLogo from "../assets/RankUp_Logo.png";
 import { useOutletContext } from "react-router-dom";
 import Loader from "../components/Loader";
 import { Calculator, Atom, Code2, Bot } from "lucide-react";
+import axios from "axios";
 import LeaderboardWidget from "../components/dashboard/LeaderboardWidget";
 import LearningModuleCard from "../components/dashboard/LearningModuleCard";
 import CareerAgentCard from "../components/dashboard/CareerAgentCard";
@@ -13,12 +14,52 @@ const Dashboard = () => {
   const { user } = useAuth();
   const { profileData } = useOutletContext(); // Get profile data from Layout
   const [showWelcomeGuide, setShowWelcomeGuide] = useState(false);
+  const [dynamicModules, setDynamicModules] = useState([]);
+
+  const iconMap = {
+    maths: <Calculator className="w-8 h-8 text-purple-400" />,
+    science: <Atom className="w-8 h-8 text-emerald-400" />,
+    coding: <Code2 className="w-8 h-8 text-orange-400" />,
+  };
+
+  const gradientMap = {
+    maths: "from-purple-500 to-indigo-500",
+    science: "from-emerald-400 to-cyan-500",
+    coding: "from-orange-400 to-amber-500",
+  };
+
+  const delayMap = {
+    maths: "delay-[0ms]",
+    science: "delay-[100ms]",
+    coding: "delay-[200ms]",
+  };
 
   useEffect(() => {
     // Show welcome guide if user hasn't seen it yet
     if (profileData && !profileData.hasSeenWelcomeGuide) {
       setShowWelcomeGuide(true);
     }
+
+    const fetchModules = async () => {
+      try {
+        const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/student/modules`);
+        const formatted = res.data.map(m => ({
+          id: m.name.toLowerCase(),
+          title: `${m.name} Zone`,
+          description: m.name === "Maths" ? "Master algorithms, logic, and complex problem-solving." :
+            m.name === "Science" ? "Explore physics simulations and chemical reactions." :
+              "Build real-world projects and master new languages.",
+          icon: iconMap[m.name.toLowerCase()] || <Calculator />,
+          gradient: gradientMap[m.name.toLowerCase()] || "from-blue-500 to-indigo-500",
+          delay: delayMap[m.name.toLowerCase()] || "delay-[0ms]",
+          dbId: m._id
+        }));
+        setDynamicModules(formatted);
+      } catch (err) {
+        console.error("Failed to fetch modules", err);
+      }
+    };
+    fetchModules();
   }, [profileData]);
 
   if (!profileData) {
@@ -31,33 +72,6 @@ const Dashboard = () => {
     : false;
 
   const greeting = isNewUser ? "Welcome" : "Welcome back";
-
-  const learningModules = [
-    {
-      id: "maths",
-      title: "Maths Zone",
-      description: "Master algorithms, logic, and complex problem-solving.",
-      icon: <Calculator className="w-8 h-8 text-purple-400" />,
-      gradient: "from-purple-500 to-indigo-500",
-      delay: "delay-[0ms]",
-    },
-    {
-      id: "science",
-      title: "Science Zone",
-      description: "Explore physics simulations and chemical reactions.",
-      icon: <Atom className="w-8 h-8 text-emerald-400" />,
-      gradient: "from-emerald-400 to-cyan-500",
-      delay: "delay-[100ms]",
-    },
-    {
-      id: "coding",
-      title: "Coding Zone",
-      description: "Build real-world projects and master new languages.",
-      icon: <Code2 className="w-8 h-8 text-orange-400" />,
-      gradient: "from-orange-400 to-amber-500",
-      delay: "delay-[200ms]",
-    },
-  ];
 
   const careerModule = {
     id: "career",
@@ -108,9 +122,14 @@ const Dashboard = () => {
 
           {/* Learning Modules Grid (3 Cols) */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mb-10">
-            {learningModules.map((module) => (
-              <LearningModuleCard key={module.id} module={module} />
-            ))}
+            {dynamicModules.length > 0 ? (
+              dynamicModules.map((module) => (
+                <LearningModuleCard key={module.dbId} module={module} />
+              ))
+            ) : (
+              // Skeleton loaders or simple message
+              [1, 2, 3].map(i => <div key={i} className="h-64 bg-white/5 rounded-2xl animate-pulse" />)
+            )}
           </div>
 
           {/* Section Title */}
