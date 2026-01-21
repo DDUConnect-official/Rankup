@@ -1,0 +1,298 @@
+
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { ArrowLeft, CheckCircle, Award } from "lucide-react";
+import axios from "axios";
+import Loader from "../components/Loader";
+import { useAuth } from "../context/AuthContext";
+
+const LevelContent = () => {
+    const { levelId } = useParams();
+    const navigate = useNavigate();
+    const { user, setUser } = useAuth(); // Need to update user context with new stats
+    
+    const [level, setLevel] = useState(null);
+    const [quiz, setQuiz] = useState(null);
+    const [loading, setLoading] = useState(true);
+    
+    // Quiz State
+    const [showQuiz, setShowQuiz] = useState(false);
+    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+    const [userAnswers, setUserAnswers] = useState({}); // { questionIndex: selectedOptionIndex }
+    const [quizCompleted, setQuizCompleted] = useState(false);
+    const [score, setScore] = useState(0);
+    const [submitting, setSubmitting] = useState(false);
+
+    useEffect(() => {
+        const fetchContent = async () => {
+            try {
+                // Fetch Level
+                const levelRes = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/student/level/${levelId}`);
+                setLevel(levelRes.data);
+                
+                // Fetch Quiz
+                if (levelRes.data.hasQuiz) {
+                    try {
+                        const quizRes = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/student/quiz/${levelId}`);
+                        setQuiz(quizRes.data);
+                    } catch (err) {
+                        console.log("No quiz found or error fetching quiz", err);
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to fetch level content", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchContent();
+    }, [levelId]);
+    
+    const handleStartQuiz = () => {
+        setShowQuiz(true);
+        window.scrollTo(0,0);
+    };
+
+    const handleOptionSelect = (optionIndex) => {
+        setUserAnswers(prev => ({
+            ...prev,
+            [currentQuestionIndex]: optionIndex
+        }));
+    };
+
+    const handleNextQuestion = () => {
+        if (currentQuestionIndex < quiz.questions.length - 1) {
+            setCurrentQuestionIndex(prev => prev + 1);
+        } else {
+            handleSubmitQuiz();
+        }
+    };
+
+    const handleSubmitQuiz = async () => {
+        setSubmitting(true);
+        // Calculate Score locally
+        let calculatedScore = 0;
+        let correctCount = 0;
+        
+        quiz.questions.forEach((q, index) => {
+            // Find index of correct answer string in options array
+            // The schema says correctAnswer is a String.
+            // We need to compare selected option string with correctAnswer string OR index.
+            // Let's assume correctAnswer stored in DB is the string value of the option.
+            const selectedOption = q.options[userAnswers[index]];
+            if (selectedOption === q.correctAnswer) {
+                correctCount++;
+            }
+        });
+        
+        calculatedScore = Math.round((correctCount / quiz.questions.length) * 100);
+        setScore(calculatedScore);
+        
+        try {
+            const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/student/quiz/submit`, {
+                userId: user.uid || user._id, // Handle both firebase UID or Mongo ID depending on what's in context
+                levelId,
+                score: calculatedScore
+            });
+            
+            // Update local user context if score/stats changed
+            // We might need to re-fetch user profile or manually update context
+            // For now, let's assume we alert/toast and user can navigate back
+            console.log("Quiz submitted:", res.data);
+            
+            setQuizCompleted(true);
+        } catch (err) {
+            console.error("Error submitting quiz", err);
+            alert("Failed to save progress. Please try again.");
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    if (loading) return <Loader text="Loading Content..." fullScreen />;
+    if (!level) return <div className="text-white text-center mt-20">Level not found.</div>;
+
+    const rendertheory = (item, index) => {
+        if (item.type === "paragraph") {
+            // Header detection
+            if (item.content.startsWith("###")) {
+                 return <h3 key={index} className="text-xl md:text-2xl font-bold text-blue-300 mt-10 mb-6 border-b border-white/10 pb-2">{item.content.replace("### ", "")}</h3>;
+            }
+            
+            // Diagram detection (simple heuristic: contains typical diagram chars)
+            if (item.content.includes("|") || item.content.includes("↑") || item.content.includes("---")) {
+                return (
+                    <div key={index} className="my-6 p-4 bg-black/40 rounded-xl border border-white/10 overflow-x-auto">
+                        <pre className="font-mono text-cyan-300 text-sm md:text-base whitespace-pre">{item.content}</pre>
+                    </div>
+                );
+            }
+
+            return <p key={index} className="text-white/80 text-lg leading-relaxed mb-6 whitespace-pre-line">{item.content}</p>;
+        }
+        
+        if (item.type === "bullet") {
+            // Bold formatting
+            const content = item.content.split(/(\*.*?\*)/g).map((part, i) => 
+                part.startsWith("*") && part.endsWith("*") ? <strong key={i} className="text-white font-bold text-blue-100 bg-blue-500/10 px-1 rounded">{part.slice(1, -1)}</strong> : part
+            );
+            return (
+                <div key={index} className="flex items-start gap-3 mb-4 ml-2 md:ml-6 group">
+                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2.5 shrink-0 group-hover:scale-125 transition-transform shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
+                    <p className="text-white/80 text-lg leading-relaxed">{content}</p>
+                </div>
+            );
+        }
+        return null;
+    };
+
+    const handleCompleteLevel = async () => {
+        setSubmitting(true);
+        try {
+            // For levels without quiz, we mark as complete with 100% score (or just complete)
+            // We reuse the quiz submit endpoint but maybe with full score?
+            // Actually, if it's reading only, maybe the score doesn't matter or is 100.
+            await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/student/quiz/submit`, {
+                userId: user.uid || user._id,
+                levelId,
+                score: 100 
+            });
+            navigate(-1); // Go back to level list
+        } catch (err) {
+            console.error("Error completing level", err);
+            alert("Failed to save progress.");
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    return (
+        <div className="w-full min-h-screen bg-[#0a0a0a] pb-20">
+             {/* ... header ... */}
+             <div className="sticky top-0 z-50 bg-[#0a0a0a]/80 backdrop-blur-xl border-b border-white/10">
+                <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
+                    <button 
+                        onClick={() => navigate(-1)}
+                        className="flex items-center gap-2 text-white/60 hover:text-white transition-colors"
+                    >
+                        <ArrowLeft size={20} />
+                        <span className="hidden md:inline">Back</span>
+                    </button>
+                    <h2 className="font-bold text-white text-sm md:text-lg truncate max-w-[200px] md:max-w-none">
+                        {level.title}
+                    </h2>
+                    <div className="flex items-center gap-2 px-3 py-1 bg-yellow-500/10 rounded-full border border-yellow-500/20 text-yellow-400 text-xs font-bold">
+                        <Award size={14} />
+                        {level.xpReward} XP
+                    </div>
+                </div>
+             </div>
+
+             {/* Main Content */}
+             <div className="max-w-3xl mx-auto px-4 py-8 md:py-12 animate-slideUpFade">
+                 {!showQuiz ? (
+                    <>
+                         {/* Title Section */}
+                         <div className="mb-10 text-center">
+                             <h1 className="text-3xl md:text-5xl font-bold text-white mb-4 bg-gradient-to-br from-white to-white/50 bg-clip-text text-transparent">
+                                 {level.title}
+                             </h1>
+                             <p className="text-white/50 text-lg">{level.description}</p>
+                         </div>
+
+                         {/* Theory Content */}
+                         <div className="bg-white/5 border border-white/10 rounded-3xl p-6 md:p-10 shadow-2xl">
+                             {level.theory && level.theory.map((item, index) => rendertheory(item, index))}
+                         </div>
+
+                         {/* Action Buttons */}
+                         <div className="mt-10 flex justify-center">
+                             {level.hasQuiz ? (
+                                 <button 
+                                    onClick={handleStartQuiz}
+                                    className="px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-2xl shadow-[0_0_30px_rgba(37,99,235,0.3)] transition-all transform hover:scale-105 flex items-center gap-3"
+                                 >
+                                     <CheckCircle size={20} />
+                                     Take Quiz & Claim XP
+                                 </button>
+                             ) : (
+                                <button 
+                                    onClick={handleCompleteLevel}
+                                    disabled={submitting}
+                                    className="px-8 py-4 bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white font-bold rounded-2xl shadow-[0_0_30px_rgba(34,197,94,0.3)] transition-all transform hover:scale-105 flex items-center gap-3"
+                                >
+                                     <CheckCircle size={20} />
+                                     {submitting ? "Completing..." : "Complete Level"}
+                                 </button>
+                             )}
+                         </div>
+                    </>
+                 ) : (
+                    /* Quiz Interface */
+                    <div className="max-w-2xl mx-auto">
+                        {!quizCompleted ? (
+                            <div className="bg-white/5 border border-white/10 rounded-3xl p-6 md:p-10 shadow-2xl animate-fadeIn">
+                                <div className="flex justify-between items-center mb-6 text-white/50 text-sm">
+                                    <span>Question {currentQuestionIndex + 1} of {quiz.questions.length}</span>
+                                    <span>Goal: {quiz.passingScore}% to pass</span>
+                                </div>
+                                
+                                <h3 className="text-2xl font-bold text-white mb-8">
+                                    {quiz.questions[currentQuestionIndex].question}
+                                </h3>
+                                
+                                <div className="space-y-4">
+                                    {quiz.questions[currentQuestionIndex].options.map((opt, idx) => (
+                                        <button
+                                            key={idx}
+                                            onClick={() => handleOptionSelect(idx)}
+                                            className={`w-full text-left p-4 rounded-xl border transition-all ${
+                                                userAnswers[currentQuestionIndex] === idx 
+                                                ? "bg-blue-500/20 border-blue-500 text-blue-200" 
+                                                : "bg-white/5 border-white/10 text-white/70 hover:bg-white/10"
+                                            }`}
+                                        >
+                                            {opt}
+                                        </button>
+                                    ))}
+                                </div>
+                                
+                                <div className="mt-8 flex justify-end">
+                                    <button 
+                                        onClick={handleNextQuestion}
+                                        disabled={userAnswers[currentQuestionIndex] === undefined || submitting}
+                                        className="px-6 py-3 bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-500 text-white font-bold rounded-xl transition-colors"
+                                    >
+                                        {currentQuestionIndex === quiz.questions.length - 1 ? (submitting ? "Submitting..." : "Submit Quiz") : "Next Question"}
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            /* Quiz Results */
+                            <div className="text-center py-10 animate-slideUpFade">
+                                <div className="inline-flex justify-center items-center w-24 h-24 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 mb-6 shadow-[0_0_40px_rgba(59,130,246,0.5)]">
+                                    <Award size={48} className="text-white" />
+                                </div>
+                                <h2 className="text-4xl font-bold text-white mb-2">
+                                    {score >= quiz.passingScore ? "Level Complete!" : "Keep Trying!"}
+                                </h2>
+                                <p className="text-white/60 text-lg mb-8">
+                                    You scored <span className={`font-bold ${score >= quiz.passingScore ? "text-green-400" : "text-red-400"}`}>{score}%</span>
+                                </p>
+                                
+                                <button
+                                    onClick={() => navigate(-1)} 
+                                    className="px-8 py-3 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl border border-white/10 transition-all"
+                                >
+                                    Back to Levels
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                 )}
+             </div>
+        </div>
+    );
+};
+
+export default LevelContent;

@@ -5,6 +5,8 @@ import VerifyEmail from "./pages/VerifyEmail";
 import Dashboard from "./pages/Dashboard";
 import ProfileSetup from "./pages/ProfileSetup";
 import ProfileDetails from "./pages/ProfileDetails";
+import Levels from "./pages/Levels";
+import LevelContent from "./pages/LevelContent";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { useAuth } from "./context/AuthContext";
 
@@ -57,6 +59,8 @@ function App() {
         >
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/profile" element={<ProfileDetails />} />
+          <Route path="/levels/:moduleId" element={<Levels />} />
+          <Route path="/level/:levelId" element={<LevelContent />} />
         </Route>
 
         {/* Fallback */}

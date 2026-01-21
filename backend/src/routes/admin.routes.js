@@ -11,6 +11,16 @@ const router = express.Router();
 // Apply isAdmin middleware to all routes in this router
 router.use(isAdmin);
 
+// --- Users Route ---
+router.get("/users", async (req, res) => {
+    try {
+        const users = await User.find({ role: { $ne: "admin" } }).select("-password");
+        res.json(users);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
 // --- Stats Route ---
 router.get("/stats", async (req, res) => {
     try {
@@ -77,12 +87,29 @@ router.put("/level/:id", async (req, res) => {
     }
 });
 
+router.delete("/level/:id", async (req, res) => {
+    try {
+        await Level.findByIdAndDelete(req.params.id);
+        // Optionally delete associated quiz/game
+        await Quiz.findOneAndDelete({ levelId: req.params.id });
+        await Game.findOneAndDelete({ levelId: req.params.id });
+        res.json({ message: "Level deleted" });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
 // --- Quiz Routes ---
 router.post("/quiz", async (req, res) => {
     try {
-        const quiz = new Quiz(req.body);
-        const saved = await quiz.save();
-        res.status(201).json(saved);
+        const { levelId } = req.body;
+        // Upsert: Update if exists, Create if not
+        const quiz = await Quiz.findOneAndUpdate(
+            { levelId }, 
+            req.body, 
+            { new: true, upsert: true, setDefaultsOnInsert: true }
+        );
+        res.status(200).json(quiz);
     } catch (err) {
         res.status(400).json({ message: err.message });
     }
@@ -92,6 +119,15 @@ router.get("/quiz/:levelId", async (req, res) => {
     try {
         const quiz = await Quiz.findOne({ levelId: req.params.levelId });
         res.json(quiz);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+router.delete("/quiz/:levelId", async (req, res) => {
+    try {
+        await Quiz.findOneAndDelete({ levelId: req.params.levelId });
+        res.json({ message: "Quiz deleted" });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }

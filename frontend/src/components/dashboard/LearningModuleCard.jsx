@@ -1,7 +1,10 @@
 import React from "react";
 import { ChevronRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const LearningModuleCard = ({ module }) => {
+    const navigate = useNavigate();
+
     // Sparkle Color Palettes
     const sparkleColors = {
         maths: ["bg-amber-400", "bg-yellow-200", "bg-red-400", "bg-orange-300"],
@@ -10,7 +13,10 @@ const LearningModuleCard = ({ module }) => {
     };
 
     return (
-        <div className={`group relative p-1 rounded-2xl bg-black/20 border border-white/5 backdrop-blur-sm overflow-hidden transition-all duration-300 hover:scale-[1.02]`}>
+        <div 
+            onClick={() => navigate(`/levels/${module.dbId}`)}
+            className={`group relative p-1 rounded-2xl bg-black/20 border border-white/5 backdrop-blur-sm overflow-hidden transition-all duration-300 hover:scale-[1.02] cursor-pointer`}
+        >
             {/* Hover Gradient Glow */}
             <div className={`absolute inset-0 transition-opacity duration-500`} />
 

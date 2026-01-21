@@ -2,7 +2,7 @@
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import RankUpLogo from '../assets/RankUp_Logo.png';
-import { Plus, Save, Trash2, Book, Gamepad, HelpCircle, CheckCircle, Circle, X, Menu } from 'lucide-react';
+import { Plus, Save, Trash2, Book, Gamepad, HelpCircle, CheckCircle, Circle, X, Menu, Pencil } from 'lucide-react';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -10,9 +10,11 @@ const Dashboard = () => {
   const [modules, setModules] = useState([]);
   const [selectedModule, setSelectedModule] = useState(null);
   const [levels, setLevels] = useState([]);
-  const [activeLevel, setActiveLevel] = useState(null);
+  const [activeLevel, setActiveLevel] = useState(null); // 'new' or levelId
   const [loading, setLoading] = useState(true);
   const [showModules, setShowModules] = useState(false);
+  const [users, setUsers] = useState([]);
+  const [viewMode, setViewMode] = useState('modules'); // 'modules' or 'users'
 
   const [levelForm, setLevelForm] = useState({
     title: '', description: '', xpReward: 50, hasGame: false, hasQuiz: false, isPublished: false,
@@ -49,28 +51,89 @@ const Dashboard = () => {
   const loadLevels = async () => {
     if (!selectedModule) return;
     try {
-      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/admin/levels/`, { headers: { email: user.email } });
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/admin/levels/${selectedModule._id}`, { headers: { email: user.email } });
       setLevels(res.data);
       setStats(s => ({ ...s, levels: res.data.length }));
     } catch (err) { console.error(err); }
   };
 
+  const loadUsers = async () => {
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/admin/users`, { headers: { email: user.email } });
+      setUsers(res.data);
+    } catch (err) { console.error(err); }
+  };
+
   useEffect(() => { loadContent(); loadStats(); }, []);
+  useEffect(() => { if (viewMode === 'users') loadUsers(); }, [viewMode]); 
   useEffect(() => { loadLevels(); }, [selectedModule]);
 
   const saveLevel = async () => {
     try {
-      const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/admin/level`, { ...levelForm, moduleId: selectedModule._id }, { headers: { email: user.email } });
-      const levelId = res.data._id;
-      if (levelForm.hasQuiz) await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/admin/quiz`, { ...quizForm, levelId }, { headers: { email: user.email } });
+      let levelId;
+      if (activeLevel === 'new') {
+          const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/admin/level`, { ...levelForm, moduleId: selectedModule._id }, { headers: { email: user.email } });
+          levelId = res.data._id;
+      } else {
+          const res = await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/admin/level/${activeLevel}`, { ...levelForm }, { headers: { email: user.email } });
+          levelId = activeLevel;
+      }
+      
+      if (levelForm.hasQuiz) {
+          await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/admin/quiz`, { ...quizForm, levelId }, { headers: { email: user.email } });
+      } else if (activeLevel !== 'new') {
+          // If editing and hasQuiz is false, try to delete existing quiz
+          try {
+             await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/admin/quiz/${levelId}`, { headers: { email: user.email } });
+          } catch(e) { console.log('No quiz to delete or error'); }
+      }
+
       if (levelForm.hasGame) await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/admin/game`, { ...gameForm, levelId }, { headers: { email: user.email } });
+      
       setActiveLevel(null); resetFields(); loadLevels();
     } catch (err) { alert('Error: ' + err.message); }
   };
 
+  const deleteLevel = async (id) => {
+      if(!window.confirm("Are you sure you want to delete this level?")) return;
+      try {
+          await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/admin/level/${id}`, { headers: { email: user.email } });
+          loadLevels();
+      } catch (err) { alert('Error: ' + err.message); }
+  };
+
+  const editLevel = async (level) => {
+      setActiveLevel(level._id);
+      setLevelForm({
+          title: level.title,
+          description: level.description,
+          xpReward: level.xpReward,
+          hasGame: level.hasGame,
+          hasQuiz: level.hasQuiz,
+          isPublished: level.isPublished,
+          theory: level.theory || []
+      });
+      // Fetch quiz
+      setQuizForm({ questions: [{ question: '', options: ['', '', '', ''], correctAnswer: '' }], passingScore: 70 });
+      if(level.hasQuiz) {
+          try {
+              const qRes = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/admin/quiz/${level._id}`, { headers: { email: user.email } });
+              if(qRes.data) setQuizForm(qRes.data);
+          } catch(e) { console.log("No quiz found"); }
+      }
+      // Fetch game
+      setGameForm({ name: '', type: 'logic', difficulty: 'easy', instructions: '', xpReward: 50 });
+      if(level.hasGame) {
+          try {
+             const gRes = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/admin/game/${level._id}`, { headers: { email: user.email } });
+             if(gRes.data) setGameForm(gRes.data);
+          } catch(e) { console.log("No game found"); }
+      }
+  };
+
   const togglePublish = async (levelId, currentStatus) => {
     try {
-      await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/admin/level/`, { isPublished: !currentStatus }, { headers: { email: user.email } });
+      await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/admin/level/${levelId}`, { isPublished: !currentStatus }, { headers: { email: user.email } });
       loadLevels();
     } catch (err) { alert('Error: ' + err.message); }
   };
@@ -109,26 +172,69 @@ const Dashboard = () => {
         <main className='flex-1 overflow-auto p-3 md:p-6 space-y-4 md:space-y-6'>
           <div className='flex flex-col md:flex-row justify-between md:items-end gap-3'>
             <div>
-              <h2 className='text-lg md:text-2xl font-bold text-white tracking-tight'>Level Management</h2>
-              <p className='text-[10px] md:text-xs text-zinc-500 mt-0.5 md:mt-1'>Add or edit learning levels</p>
+              <h2 className='text-lg md:text-2xl font-bold text-white tracking-tight'>
+                 {viewMode === 'users' ? 'User Management' : 'Level Management'}
+              </h2>
+              <p className='text-[10px] md:text-xs text-zinc-500 mt-0.5 md:mt-1'>
+                 {viewMode === 'users' ? 'View registered students' : 'Add or edit learning levels'}
+              </p>
             </div>
-            {activeLevel === null && (
+            {viewMode === 'modules' && activeLevel === null && (
               <button onClick={() => setActiveLevel('new')} className='bg-white text-black text-[10px] md:text-xs font-bold px-4 md:px-5 py-2 rounded shadow-lg hover:bg-zinc-200 transition-all flex items-center justify-center gap-2 cursor-pointer'>
                 <Plus size={12} className='md:w-3.5 md:h-3.5' /> Add Level
               </button>
             )}
+            {viewMode === 'users' && (
+               <button onClick={() => setViewMode('modules')} className='bg-zinc-800 text-zinc-400 text-[10px] md:text-xs font-bold px-4 md:px-5 py-2 rounded shadow-lg hover:bg-zinc-700 transition-all flex items-center justify-center gap-2 cursor-pointer'>
+                 Back to Modules
+               </button>
+            )}
           </div>
 
           <div className='grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4'>
-            {[{ label: 'Modules', value: stats.modules }, { label: 'Levels', value: stats.levels }, { label: 'Users', value: stats.students }, { label: 'Status', value: stats.status }].map((s, i) => (
-              <div key={i} className='bg-zinc-900/50 border border-zinc-900 p-2 md:p-4 rounded-lg'>
+            {[{ label: 'Modules', value: stats.modules, action: () => setViewMode('modules') }, { label: 'Levels', value: stats.levels, action: () => setViewMode('modules') }, { label: 'Users', value: stats.students, action: () => setViewMode('users') }, { label: 'Status', value: stats.status }].map((s, i) => (
+              <div key={i} onClick={s.action} className={`bg-zinc-900/50 border border-zinc-900 p-2 md:p-4 rounded-lg ${s.action ? 'cursor-pointer hover:bg-zinc-900' : ''}`}>
                 <p className='text-[8px] md:text-[9px] font-bold text-zinc-600 uppercase tracking-widest mb-0.5 md:mb-1'>{s.label}</p>
                 <p className='text-sm md:text-xl font-bold text-white'>{s.value}</p>
               </div>
             ))}
           </div>
 
-          <div className='grid grid-cols-1 lg:grid-cols-12 gap-3 md:gap-6 pb-10 md:pb-20'>
+          {viewMode === 'users' ? (
+              <div className='bg-zinc-900/50 border border-zinc-900 rounded-lg overflow-hidden'>
+                   <div className='px-3 md:px-6 py-2 md:py-4 bg-zinc-900/80 border-b border-zinc-900 text-[9px] md:text-[10px] font-bold text-zinc-500 uppercase tracking-widest'>
+                     Registered Students
+                   </div>
+                   <table className='w-full text-left'>
+                     <thead className='text-[9px] font-bold text-zinc-700 uppercase border-b border-zinc-900'>
+                       <tr>
+                           <th className='px-6 py-3'>Avatar</th>
+                           <th className='px-6 py-3'>Username</th>
+                           <th className='px-6 py-3'>Email</th>
+                           <th className='px-6 py-3'>XP / Score</th>
+                           <th className='px-6 py-3'>Solved Problems</th>
+                        </tr>
+                     </thead>
+                     <tbody className='text-sm'>
+                       {users.map(u => (
+                         <tr key={u._id} className='border-b border-zinc-900/40 hover:bg-zinc-900/20 transition-colors'>
+                           <td className='px-6 py-4'>
+                               <img src={u.avatar} alt="av" className="w-8 h-8 rounded-full border border-zinc-700" />
+                           </td>
+                           <td className='px-6 py-4 font-bold text-zinc-300'>{u.username || 'Unset'}</td>
+                           <td className='px-6 py-4 text-zinc-500'>{u.email}</td>
+                           <td className='px-6 py-4 text-emerald-400 font-mono'>{u.totalScore} XP</td>
+                           <td className='px-6 py-4 text-zinc-400'>{u.solvedProblemsCount}</td>
+                         </tr>
+                       ))}
+                       {users.length === 0 && (
+                            <tr><td colSpan="5" className="p-10 text-center text-zinc-600">No users found.</td></tr>
+                       )}
+                     </tbody>
+                   </table>
+              </div>
+          ) : (
+             <div className='grid grid-cols-1 lg:grid-cols-12 gap-3 md:gap-6 pb-10 md:pb-20'>
             <div className='lg:col-span-3'>
               <div className='flex items-center justify-between mb-2 md:mb-3 lg:block'>
                 <p className='text-[8px] md:text-[9px] font-bold text-zinc-700 uppercase tracking-widest'>Modules</p>
@@ -162,7 +268,10 @@ const Dashboard = () => {
                             {l.isPublished ? 'Live' : 'Draft'}
                           </button>
                         </div>
-                        <button className='text-zinc-700 hover:text-red-500 transition-colors text-xs cursor-pointer'><Trash2 size={14} /></button>
+                        <div className="flex gap-2">
+                            <button onClick={() => editLevel(l)} className='text-zinc-700 hover:text-blue-500 transition-colors text-xs cursor-pointer'><Pencil size={14} /></button>
+                            <button onClick={() => deleteLevel(l._id)} className='text-zinc-700 hover:text-red-500 transition-colors text-xs cursor-pointer'><Trash2 size={14} /></button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -180,7 +289,10 @@ const Dashboard = () => {
                           </td>
                           <td className='px-6 py-4 font-bold text-zinc-300'>{l.title}</td>
                           <td className='px-6 py-4 text-zinc-500'>{l.xpReward}</td>
-                          <td className='px-6 py-4 text-right'><button className='text-zinc-700 hover:text-red-500 transition-colors cursor-pointer'><Trash2 size={16} /></button></td>
+                          <td className='px-6 py-4 text-right flex justify-end gap-3'>
+                              <button onClick={() => editLevel(l)} className='text-zinc-500 hover:text-white transition-colors cursor-pointer'><Pencil size={16} /></button>
+                              <button onClick={() => deleteLevel(l._id)} className='text-zinc-700 hover:text-red-500 transition-colors cursor-pointer'><Trash2 size={16} /></button>
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -308,7 +420,8 @@ const Dashboard = () => {
                 </div>
               )}
             </div>
-          </div>
+           </div>
+          )}
         </main>
       </div>
     </div>
