@@ -30,6 +30,7 @@ const app = express();
 app.use(cors({
     origin: [
         process.env.CLIENT_URL,
+        "https://rankup-admin-eight.vercel.app",
         "http://192.168.1.142:5173",
         "http://localhost:5174", // Standard for second vite app
         "http://localhost:5173"
