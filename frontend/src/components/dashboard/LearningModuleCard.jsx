@@ -13,7 +13,7 @@ const LearningModuleCard = ({ module }) => {
     };
 
     return (
-        <div 
+        <div
             onClick={() => navigate(`/levels/${module.dbId}`)}
             className={`group relative p-1 rounded-2xl bg-black/20 border border-white/5 backdrop-blur-sm overflow-hidden transition-all duration-300 hover:scale-[1.02] cursor-pointer`}
         >
