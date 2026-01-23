@@ -4,6 +4,7 @@ import { ArrowLeft, CheckCircle, Award, Play, Pause, Volume2 } from "lucide-reac
 import axios from "axios";
 import Loader from "../components/Loader";
 import { useAuth } from "../context/AuthContext";
+import VoiceAssistant from "../components/VoiceAssistant";
 
 const LevelContent = () => {
     const { levelId } = useParams();
@@ -418,7 +419,11 @@ const LevelContent = () => {
                         )}
                     </div>
                  )}
+
              </div>
+             
+             {/* Voice Assistant */}
+             <VoiceAssistant context={level?.theory} />
         </div>
     );
 };

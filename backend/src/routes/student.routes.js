@@ -93,6 +93,7 @@ router.post("/quiz/submit", async (req, res) => {
 router.post("/synthesize", async (req, res) => {
     try {
         const { text, voiceId } = req.body;
+        console.log("Synthesize Request:", { text: text?.substring(0, 20) + "...", voiceId });
         
         if (!process.env.MURF_API_KEY) {
             return res.status(500).json({ message: "MURF_API_KEY not configured" });
@@ -111,10 +112,11 @@ router.post("/synthesize", async (req, res) => {
                 'Accept': 'application/json'
             }
         });
-
+        
+        console.log("Murf API Response success. Audio URL:", response.data.audioFile);
         res.json({ audioUrl: response.data.audioFile });
     } catch (err) {
-        console.error("Murf AI Error:", err.response?.data || err.message);
+        console.error("Murf AI Error Full:", err.response?.data || err.message);
         res.status(500).json({ message: "Failed to generate speech" });
     }
 });
