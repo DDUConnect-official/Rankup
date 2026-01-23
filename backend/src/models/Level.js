@@ -4,10 +4,7 @@ const levelSchema = new mongoose.Schema({
     moduleId: { type: mongoose.Schema.Types.ObjectId, ref: "Module", required: true },
     title: { type: String, required: true },
     description: { type: String },
-    theory: [{
-        type: { type: String, enum: ["paragraph", "bullet"], required: true },
-        content: { type: String, required: true }
-    }],
+    content: [{ type: String }],  // Simple array of paragraph strings
     xpReward: { type: Number, default: 0 },
     hasGame: { type: Boolean, default: false },
     hasQuiz: { type: Boolean, default: false },
