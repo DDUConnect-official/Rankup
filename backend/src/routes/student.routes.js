@@ -1,4 +1,5 @@
 import express from "express";
+import axios from "axios";
 import Module from "../models/Module.js";
 import Level from "../models/Level.js";
 import Quiz from "../models/Quiz.js";
@@ -85,6 +86,36 @@ router.post("/quiz/submit", async (req, res) => {
         res.json({ message: "Progress saved", totalScore: user.totalScore, alreadyCompleted: !!alreadyCompleted });
     } catch (err) {
         res.status(500).json({ message: err.message });
+    }
+});
+
+// VOICE SYNTHESIS (MURF AI)
+router.post("/synthesize", async (req, res) => {
+    try {
+        const { text, voiceId } = req.body;
+        
+        if (!process.env.MURF_API_KEY) {
+            return res.status(500).json({ message: "MURF_API_KEY not configured" });
+        }
+
+        // Murf AI API Call
+        const response = await axios.post('https://api.murf.ai/v1/speech/generate', {
+            voiceId: voiceId || 'en-US-marcus', // Default voice
+            text: text,
+            format: 'MP3',
+            channel: 'MONO'
+        }, {
+            headers: {
+                'api-key': process.env.MURF_API_KEY,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        });
+
+        res.json({ audioUrl: response.data.audioFile });
+    } catch (err) {
+        console.error("Murf AI Error:", err.response?.data || err.message);
+        res.status(500).json({ message: "Failed to generate speech" });
     }
 });
 

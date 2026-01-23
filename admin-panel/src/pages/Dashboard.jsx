@@ -153,6 +153,8 @@ const Dashboard = () => {
   const updateOption = (qIdx, oIdx, value) => { const n = [...quizForm.questions]; n[qIdx].options[oIdx] = value; setQuizForm({ ...quizForm, questions: n }); };
   const setCorrectAnswer = (qIdx, answer) => { const n = [...quizForm.questions]; n[qIdx].correctAnswer = answer; setQuizForm({ ...quizForm, questions: n }); };
 
+  const removeQuestion = (qIdx) => setQuizForm({ ...quizForm, questions: quizForm.questions.filter((_, i) => i !== qIdx) });
+
   if (loading) return <div className='min-h-screen bg-zinc-950 flex items-center justify-center text-zinc-500'>Loading...</div>;
 
   return (
@@ -370,7 +372,10 @@ const Dashboard = () => {
                           <>
                             {quizForm.questions.map((q, qIdx) => (
                               <div key={qIdx} className='p-3 md:p-4 bg-zinc-950 border border-zinc-900 rounded-lg space-y-3 md:space-y-4'>
-                                <input type='text' placeholder='Question' value={q.question} onChange={e => updateQuestion(qIdx, 'question', e.target.value)} className='w-full bg-zinc-900 border border-zinc-800 p-2 md:p-3 rounded text-[10px] md:text-xs outline-none' />
+                                <div className='flex items-center gap-2'>
+                                    <input type='text' placeholder='Question' value={q.question} onChange={e => updateQuestion(qIdx, 'question', e.target.value)} className='flex-1 bg-zinc-900 border border-zinc-800 p-2 md:p-3 rounded text-[10px] md:text-xs outline-none' />
+                                    <button onClick={() => removeQuestion(qIdx)} className='text-zinc-700 hover:text-red-500 transition-colors p-2' title="Delete Question"><Trash2 size={16} /></button>
+                                </div>
                                 <div className='grid grid-cols-1 md:grid-cols-2 gap-2'>
                                   {q.options.map((o, oIdx) => (
                                     <div key={oIdx} className='flex gap-2 items-center'>

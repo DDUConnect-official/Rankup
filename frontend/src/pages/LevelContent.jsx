@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, CheckCircle, Award } from "lucide-react";
+import { ArrowLeft, CheckCircle, Award, Play, Pause, Volume2 } from "lucide-react";
 import axios from "axios";
 import Loader from "../components/Loader";
 import { useAuth } from "../context/AuthContext";
@@ -9,20 +8,88 @@ import { useAuth } from "../context/AuthContext";
 const LevelContent = () => {
     const { levelId } = useParams();
     const navigate = useNavigate();
-    const { user, setUser } = useAuth(); // Need to update user context with new stats
+    const { user, setUser } = useAuth();
     
+    // Level & Quiz State
     const [level, setLevel] = useState(null);
     const [quiz, setQuiz] = useState(null);
     const [loading, setLoading] = useState(true);
     
-    // Quiz State
+    // Quiz Progress State
     const [showQuiz, setShowQuiz] = useState(false);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-    const [userAnswers, setUserAnswers] = useState({}); // { questionIndex: selectedOptionIndex }
+    const [userAnswers, setUserAnswers] = useState({}); 
     const [quizCompleted, setQuizCompleted] = useState(false);
     const [score, setScore] = useState(0);
     const [submitting, setSubmitting] = useState(false);
 
+    // Voice State
+    const [playingIndex, setPlayingIndex] = useState(null); 
+    const [isAudioPlaying, setIsAudioPlaying] = useState(false); 
+    const [loadingIndex, setLoadingIndex] = useState(null); 
+    const [audioRef] = useState(new Audio());
+    const [voiceEnabled, setVoiceEnabled] = useState(false);
+
+    // Audio Cleanup
+    useEffect(() => {
+        const onEnded = () => setIsAudioPlaying(false);
+        audioRef.addEventListener('ended', onEnded);
+        return () => {
+            audioRef.removeEventListener('ended', onEnded);
+            audioRef.pause();
+            audioRef.src = "";
+        };
+    }, [audioRef]);
+
+    // Audio Handlers
+    const handlePlayAudio = async (text, index) => {
+        if (playingIndex === index) {
+            if (isAudioPlaying) {
+                audioRef.pause();
+                setIsAudioPlaying(false);
+            } else {
+                if (audioRef.src) {
+                     audioRef.play().catch(e => console.error(e));
+                     setIsAudioPlaying(true);
+                } else {
+                   loadAndPlay(text, index);
+                }
+            }
+            return;
+        }
+        loadAndPlay(text, index);
+    };
+
+    const loadAndPlay = async (text, index) => {
+        audioRef.pause();
+        setIsAudioPlaying(false);
+        
+        setPlayingIndex(index);
+        setLoadingIndex(index);
+
+        try {
+            const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/student/synthesize`, {
+                text,
+                voiceId: 'en-US-marcus'
+            });
+
+            if (res.data.audioUrl) {
+                audioRef.src = res.data.audioUrl;
+                audioRef.play().then(() => {
+                    setIsAudioPlaying(true);
+                }).catch(err => {
+                    console.error("Playback error", err);
+                });
+            }
+        } catch (err) {
+            console.error("Audio synthesis failed", err);
+            setPlayingIndex(null); 
+        } finally {
+            setLoadingIndex(null);
+        }
+    };
+
+    // Data Fetching
     useEffect(() => {
         const fetchContent = async () => {
             try {
@@ -48,9 +115,12 @@ const LevelContent = () => {
         fetchContent();
     }, [levelId]);
     
+    // Quiz Handlers
     const handleStartQuiz = () => {
         setShowQuiz(true);
         window.scrollTo(0,0);
+        audioRef.pause(); 
+        setIsAudioPlaying(false);
     };
 
     const handleOptionSelect = (optionIndex) => {
@@ -70,15 +140,10 @@ const LevelContent = () => {
 
     const handleSubmitQuiz = async () => {
         setSubmitting(true);
-        // Calculate Score locally
         let calculatedScore = 0;
         let correctCount = 0;
         
         quiz.questions.forEach((q, index) => {
-            // Find index of correct answer string in options array
-            // The schema says correctAnswer is a String.
-            // We need to compare selected option string with correctAnswer string OR index.
-            // Let's assume correctAnswer stored in DB is the string value of the option.
             const selectedOption = q.options[userAnswers[index]];
             if (selectedOption === q.correctAnswer) {
                 correctCount++;
@@ -90,16 +155,11 @@ const LevelContent = () => {
         
         try {
             const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/student/quiz/submit`, {
-                userId: user.uid || user._id, // Handle both firebase UID or Mongo ID depending on what's in context
+                userId: user.uid || user._id, 
                 levelId,
                 score: calculatedScore
             });
-            
-            // Update local user context if score/stats changed
-            // We might need to re-fetch user profile or manually update context
-            // For now, let's assume we alert/toast and user can navigate back
             console.log("Quiz submitted:", res.data);
-            
             setQuizCompleted(true);
         } catch (err) {
             console.error("Error submitting quiz", err);
@@ -109,55 +169,15 @@ const LevelContent = () => {
         }
     };
 
-    if (loading) return <Loader text="Loading Content..." fullScreen />;
-    if (!level) return <div className="text-white text-center mt-20">Level not found.</div>;
-
-    const rendertheory = (item, index) => {
-        if (item.type === "paragraph") {
-            // Header detection
-            if (item.content.startsWith("###")) {
-                 return <h3 key={index} className="text-xl md:text-2xl font-bold text-blue-300 mt-10 mb-6 border-b border-white/10 pb-2">{item.content.replace("### ", "")}</h3>;
-            }
-            
-            // Diagram detection (simple heuristic: contains typical diagram chars)
-            if (item.content.includes("|") || item.content.includes("↑") || item.content.includes("---")) {
-                return (
-                    <div key={index} className="my-6 p-4 bg-black/40 rounded-xl border border-white/10 overflow-x-auto">
-                        <pre className="font-mono text-cyan-300 text-sm md:text-base whitespace-pre">{item.content}</pre>
-                    </div>
-                );
-            }
-
-            return <p key={index} className="text-white/80 text-lg leading-relaxed mb-6 whitespace-pre-line">{item.content}</p>;
-        }
-        
-        if (item.type === "bullet") {
-            // Bold formatting
-            const content = item.content.split(/(\*.*?\*)/g).map((part, i) => 
-                part.startsWith("*") && part.endsWith("*") ? <strong key={i} className="text-white font-bold text-blue-100 bg-blue-500/10 px-1 rounded">{part.slice(1, -1)}</strong> : part
-            );
-            return (
-                <div key={index} className="flex items-start gap-3 mb-4 ml-2 md:ml-6 group">
-                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2.5 shrink-0 group-hover:scale-125 transition-transform shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
-                    <p className="text-white/80 text-lg leading-relaxed">{content}</p>
-                </div>
-            );
-        }
-        return null;
-    };
-
     const handleCompleteLevel = async () => {
         setSubmitting(true);
         try {
-            // For levels without quiz, we mark as complete with 100% score (or just complete)
-            // We reuse the quiz submit endpoint but maybe with full score?
-            // Actually, if it's reading only, maybe the score doesn't matter or is 100.
             await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/student/quiz/submit`, {
                 userId: user.uid || user._id,
                 levelId,
                 score: 100 
             });
-            navigate(-1); // Go back to level list
+            navigate(-1); 
         } catch (err) {
             console.error("Error completing level", err);
             alert("Failed to save progress.");
@@ -166,9 +186,109 @@ const LevelContent = () => {
         }
     };
 
+    // Component: VoicePlayButton
+    const VoicePlayButton = ({ onClick, isPlaying, isLoading, isAudioPlaying }) => (
+        <button 
+            onClick={(e) => {
+                e.stopPropagation();
+                onClick();
+            }}
+            className={`p-3 rounded-full transition-all duration-300 transform hover:scale-110 flex items-center justify-center ${
+                isPlaying 
+                ? 'bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.6)] animate-pulse' 
+                : 'bg-white/10 text-white/50 hover:bg-white/20 hover:text-white border border-white/5'
+            }`}
+            title="Listen"
+        >
+            {isLoading ? (
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (isPlaying && isAudioPlaying) ? (
+                <Pause size={18} fill="currentColor" />
+            ) : (
+                <Play size={18} fill="currentColor" />
+            )}
+        </button>
+    );
+
+    // Guard Clauses
+    if (loading) return <Loader text="Loading Content..." fullScreen />;
+    if (!level) return <div className="text-white text-center mt-20">Level not found.</div>;
+
+    const rendertheory = (item, index) => {
+        const isPlaying = playingIndex === index;
+        const isLoading = loadingIndex === index;
+
+        if (item.type === "paragraph") {
+            if (item.content.startsWith("###")) {
+                 const headerText = item.content.replace("### ", "");
+                 return (
+                    <div key={index} className="mt-12 mb-8 group relative flex items-center gap-4">
+                        <h3 className="flex-1 text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300 pb-2 border-b border-white/10">
+                            {headerText}
+                        </h3>
+                        {voiceEnabled && (
+                            <VoicePlayButton 
+                                onClick={() => handlePlayAudio(headerText, index)}
+                                isPlaying={isPlaying}
+                                isLoading={isLoading}
+                                isAudioPlaying={isAudioPlaying}
+                            />
+                        )}
+                    </div>
+                 );
+            }
+            
+            if (item.content.includes("|") || item.content.includes("↑") || item.content.includes("---")) {
+                return (
+                    <div key={index} className="my-8 p-6 bg-black/40 rounded-2xl border border-white/10 overflow-x-auto shadow-inner">
+                        <pre className="font-mono text-cyan-300 text-sm md:text-base whitespace-pre">{item.content}</pre>
+                    </div>
+                );
+            }
+
+            return (
+                <div key={index} className="mb-8 group relative flex gap-6 items-start">
+                     {voiceEnabled && (
+                        <div className="shrink-0 mt-1">
+                             <VoicePlayButton 
+                                onClick={() => handlePlayAudio(item.content, index)}
+                                isPlaying={isPlaying}
+                                isLoading={isLoading}
+                                isAudioPlaying={isAudioPlaying}
+                            />
+                        </div>
+                     )}
+                    <p className={`text-lg md:text-xl leading-8 whitespace-pre-line transition-colors duration-300 ${isPlaying ? 'text-blue-100' : 'text-white/80'}`}>
+                        {item.content}
+                    </p>
+                </div>
+            );
+        }
+        
+        if (item.type === "bullet") {
+            const content = item.content.split(/(\*.*?\*)/g).map((part, i) => 
+                part.startsWith("*") && part.endsWith("*") ? <strong key={i} className="text-white font-bold text-blue-100 bg-blue-500/10 px-1 rounded">{part.slice(1, -1)}</strong> : part
+            );
+            return (
+                <div key={index} className="flex items-start gap-4 mb-6 ml-2 md:ml-6 group">
+                    <div className="w-2 h-2 rounded-full bg-blue-500 mt-2.5 shrink-0 shadow-[0_0_10px_rgba(59,130,246,0.6)]" />
+                    <p className="text-white/80 text-lg leading-relaxed flex-1">{content}</p>
+                    {voiceEnabled && (
+                        <VoicePlayButton 
+                            onClick={() => handlePlayAudio(item.content, index)}
+                            isPlaying={isPlaying}
+                            isLoading={isLoading}
+                            isAudioPlaying={isAudioPlaying}
+                        />
+                    )}
+                </div>
+            );
+        }
+        return null;
+    };
+
     return (
         <div className="w-full min-h-screen bg-[#0a0a0a] pb-20">
-             {/* ... header ... */}
              <div className="sticky top-0 z-50 bg-[#0a0a0a]/80 backdrop-blur-xl border-b border-white/10">
                 <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
                     <button 
@@ -181,6 +301,20 @@ const LevelContent = () => {
                     <h2 className="font-bold text-white text-sm md:text-lg truncate max-w-[200px] md:max-w-none">
                         {level.title}
                     </h2>
+                    <button 
+                        onClick={() => setVoiceEnabled(!voiceEnabled)}
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all ${
+                            voiceEnabled 
+                            ? 'bg-blue-600/20 border-blue-500 text-blue-400' 
+                            : 'bg-white/5 border-white/10 text-white/40 hover:bg-white/10 hover:text-white/60'
+                        }`}
+                    >
+                        <Volume2 size={14} className={voiceEnabled ? "animate-pulse" : ""} />
+                        <span className="text-xs font-bold uppercase tracking-wider hidden md:inline">Voice</span>
+                        <div className={`w-6 h-3 rounded-full relative transition-colors ${voiceEnabled ? 'bg-blue-500' : 'bg-white/10'}`}>
+                            <div className={`absolute top-0.5 w-2 h-2 rounded-full bg-white transition-all shadow-sm ${voiceEnabled ? 'left-3.5' : 'left-0.5'}`} />
+                        </div>
+                    </button>
                     <div className="flex items-center gap-2 px-3 py-1 bg-yellow-500/10 rounded-full border border-yellow-500/20 text-yellow-400 text-xs font-bold">
                         <Award size={14} />
                         {level.xpReward} XP
@@ -188,11 +322,9 @@ const LevelContent = () => {
                 </div>
              </div>
 
-             {/* Main Content */}
              <div className="max-w-3xl mx-auto px-4 py-8 md:py-12 animate-slideUpFade">
                  {!showQuiz ? (
                     <>
-                         {/* Title Section */}
                          <div className="mb-10 text-center">
                              <h1 className="text-3xl md:text-5xl font-bold text-white mb-4 bg-gradient-to-br from-white to-white/50 bg-clip-text text-transparent">
                                  {level.title}
@@ -200,12 +332,10 @@ const LevelContent = () => {
                              <p className="text-white/50 text-lg">{level.description}</p>
                          </div>
 
-                         {/* Theory Content */}
                          <div className="bg-white/5 border border-white/10 rounded-3xl p-6 md:p-10 shadow-2xl">
                              {level.theory && level.theory.map((item, index) => rendertheory(item, index))}
                          </div>
 
-                         {/* Action Buttons */}
                          <div className="mt-10 flex justify-center">
                              {level.hasQuiz ? (
                                  <button 
@@ -228,7 +358,6 @@ const LevelContent = () => {
                          </div>
                     </>
                  ) : (
-                    /* Quiz Interface */
                     <div className="max-w-2xl mx-auto">
                         {!quizCompleted ? (
                             <div className="bg-white/5 border border-white/10 rounded-3xl p-6 md:p-10 shadow-2xl animate-fadeIn">
@@ -268,7 +397,6 @@ const LevelContent = () => {
                                 </div>
                             </div>
                         ) : (
-                            /* Quiz Results */
                             <div className="text-center py-10 animate-slideUpFade">
                                 <div className="inline-flex justify-center items-center w-24 h-24 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 mb-6 shadow-[0_0_40px_rgba(59,130,246,0.5)]">
                                     <Award size={48} className="text-white" />
