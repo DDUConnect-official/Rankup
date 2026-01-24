@@ -395,17 +395,12 @@ const LevelContent = () => {
                             </div>
                         )}
                     </div>
-<<<<<<< HEAD
                 )}
             </div>
-=======
-                 )}
 
-             </div>
-             
-             {/* Voice Assistant */}
-             <VoiceAssistant context={level?.theory} />
->>>>>>> bf02de34b1e127198ca346620141fc7fce422ca0
+            {/* Voice Assistant */}
+            <VoiceAssistant context={level?.content} />
+            {/* <VoiceAssistant context={level?.content} /> */}
         </div>
     );
 };
