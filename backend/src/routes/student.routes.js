@@ -90,9 +90,19 @@ router.post("/quiz/submit", async (req, res) => {
 });
 
 // VOICE SYNTHESIS (MURF AI)
+const voiceCache = new Map();
+
 router.post("/synthesize", async (req, res) => {
     try {
         const { text, voiceId } = req.body;
+        
+        // Check Cache first
+        const cacheKey = `${voiceId}_${text?.trim()}`;
+        if (voiceCache.has(cacheKey)) {
+            console.log("Serving from Cache:", cacheKey.substring(0, 30));
+            return res.json({ audioUrl: voiceCache.get(cacheKey) });
+        }
+
         console.log("Synthesize Request:", { text: text?.substring(0, 20) + "...", voiceId });
         
         if (!process.env.MURF_API_KEY) {
@@ -113,8 +123,13 @@ router.post("/synthesize", async (req, res) => {
             }
         });
         
-        console.log("Murf API Response success. Audio URL:", response.data.audioFile);
-        res.json({ audioUrl: response.data.audioFile });
+        const audioUrl = response.data.audioFile;
+        console.log("Murf API Response success. Audio URL:", audioUrl);
+        
+        // Save to Cache
+        voiceCache.set(cacheKey, audioUrl);
+        
+        res.json({ audioUrl: audioUrl });
     } catch (err) {
         console.error("Murf AI Error Full:", err.response?.data || err.message);
         res.status(500).json({ message: "Failed to generate speech" });
