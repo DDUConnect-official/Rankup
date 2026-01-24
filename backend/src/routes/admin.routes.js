@@ -5,6 +5,7 @@ import Level from "../models/Level.js";
 import Game from "../models/Game.js";
 import Quiz from "../models/Quiz.js";
 import User from "../models/User.js";
+import { generateQuiz } from "../services/gemini.service.js";
 
 const router = express.Router();
 
@@ -105,8 +106,8 @@ router.post("/quiz", async (req, res) => {
         const { levelId } = req.body;
         // Upsert: Update if exists, Create if not
         const quiz = await Quiz.findOneAndUpdate(
-            { levelId }, 
-            req.body, 
+            { levelId },
+            req.body,
             { new: true, upsert: true, setDefaultsOnInsert: true }
         );
         res.status(200).json(quiz);
@@ -150,6 +151,36 @@ router.get("/game/:levelId", async (req, res) => {
         res.json(game);
     } catch (err) {
         res.status(500).json({ message: err.message });
+    }
+});
+
+// --- AI Quiz Generation Route ---
+router.post("/quiz/generate", async (req, res) => {
+    try {
+        const { content, questionCount = 5 } = req.body;
+
+        // Validate input
+        if (!content || !Array.isArray(content) || content.length === 0) {
+            return res.status(400).json({
+                message: "Content array is required and must not be empty"
+            });
+        }
+
+        // Generate quiz using Gemini
+        const questions = await generateQuiz(content, questionCount);
+
+        res.json({
+            success: true,
+            questions,
+            count: questions.length
+        });
+
+    } catch (err) {
+        console.error('Quiz generation error:', err);
+        res.status(500).json({
+            message: "Failed to generate quiz",
+            error: err.message
+        });
     }
 });
 
