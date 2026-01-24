@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, BookOpen, Star, Lock, Play } from "lucide-react";
@@ -52,28 +51,28 @@ const Levels = () => {
     const totalXp = levels.reduce((acc, curr) => acc + (curr.xpReward || 0), 0);
 
     return (
-        <div className="w-full min-h-screen p-4 md:p-8 animate-slideUpFade flex flex-col items-center">
+        <div className="w-full min-h-screen p-2 md:p-8 md:pt-3 animate-slideUpFade flex flex-col items-center">
 
             {/* Main Glass Container */}
-            <div className="w-full max-w-7xl p-4 md:p-10 rounded-xl border border-white/10 backdrop-blur-2xl shadow-xl bg-black/20">
+            <div className="w-full max-w-8xl p-4 md:p-10 rounded-xl border border-white/10 backdrop-blur-2xl shadow-xl bg-black/20">
 
                 {/* Header Section */}
-                <div className="w-full flex flex-col items-center gap-6 mb-12 md:flex-row md:items-end md:justify-between animate-in fade-in slide-in-from-bottom-4 duration-700">
+                <div className="w-full flex flex-col items-center gap-6 mb-6 md:mb-12 md:flex-row md:items-end md:justify-between animate-in fade-in slide-in-from-bottom-4 duration-700">
 
                     {/* Title Area */}
-                    <div className="flex items-center gap-6">
+                    <div className="flex flex-col md:flex-row md:items-start gap-2 md:gap-6">
                         <button
                             onClick={() => navigate("/dashboard")}
-                            className="p-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors backdrop-blur-md cursor-pointer group"
+                            className="p-2 md:p-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors backdrop-blur-md cursor-pointer group mt-2 w-fit"
                         >
                             <ArrowLeft className="text-white w-6 h-6 group-hover:-translate-x-1 transition-transform" />
                         </button>
 
-                        <div className="text-left">
-                            <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight">
+                        <div className="text-left pl-2 pt-2 md:pl-0 md:pt-0">
+                            <h1 className="text-3xl md:text-5xl font-bold text-white tracking-tight">
                                 {moduleInfo?.name || "Module"} Zone
                             </h1>
-                            <p className="text-white/50 text-lg">Master the concepts and conquer the levels.</p>
+                            <p className="text-white/50 text-sm md:text-lg">Master the concepts and conquer the levels.</p>
                         </div>
                     </div>
 
@@ -85,17 +84,11 @@ const Levels = () => {
                     />
                 </div>
 
-                {/* Section Title */}
-                <h2 className="text-xl text-white/80 font-bold mb-6 flex items-center gap-2">
-                    <span className={`w-1 h-6 bg-gradient-to-b ${gradientMap[moduleNameKey] || "from-blue-500 to-purple-500"} rounded-full`}></span>
-                    Available Levels
-                </h2>
-
                 {/* Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {levels.length > 0 ? (
                         levels.map((level, index) => (
-                            <div key={level._id} className="group relative bg-black/40 border border-white/10 rounded-2xl p-6 backdrop-blur-xl overflow-hidden">
+                            <div key={level._id} className="group relative bg-black/40 border border-white/10 rounded-2xl p-4 md:p-6 backdrop-blur-xl overflow-hidden">
                                 {/* Decorative BG */}
                                 <div className={`absolute inset-0 bg-gradient-to-br`} />
 
@@ -115,7 +108,7 @@ const Levels = () => {
 
                                     <button
                                         onClick={() => navigate(`/level/${level._id}`)}
-                                        className="w-full py-4 bg-white text-black font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-white/90 transition-all active:scale-[0.98] cursor-pointer shadow-lg shadow-white/10"
+                                        className="w-full py-3 md:py-4 bg-white text-black font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-white/90 transition-all active:scale-[0.98] cursor-pointer shadow-lg shadow-white/10"
                                     >
                                         <Play size={18} fill="currentColor" />
                                         START LEVEL
