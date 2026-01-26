@@ -1,22 +1,134 @@
-import React, { useState, useEffect } from "react";
-import { ChevronRight } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { ChevronRight, Volume2, VolumeX } from "lucide-react";
 
 const ProfileSetupIntro = ({ onContinue }) => {
     const [isVisible, setIsVisible] = useState(false);
+    const [isMuted, setIsMuted] = useState(false);
+    const audioRef = useRef(new Audio());
+    const backendUrl = import.meta.env.VITE_BACKEND_URL;
+
+    const introText = "Before you dive into the world of gamified learning, let's set up your profile. Choose your persona, pick your vibe, and get ready to level up your skills!";
+
+    const fadeOutInterval = useRef(null);
+    const isMounted = useRef(true);
 
     useEffect(() => {
+        isMounted.current = true;
         // Disable body scroll
         document.body.style.overflow = "hidden";
-        setTimeout(() => setIsVisible(true), 100);
+        setTimeout(() => {
+            if (isMounted.current) setIsVisible(true);
+        }, 100);
 
         return () => {
+            isMounted.current = false;
             document.body.style.overflow = "auto";
+            // Cleanup audio and intervals on unmount
+            if (fadeOutInterval.current) clearInterval(fadeOutInterval.current);
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
         };
     }, []);
 
+    const [showUnmuteHint, setShowUnmuteHint] = useState(false);
+
+    // Audio Playback Trigger
+    useEffect(() => {
+        const fetchAndPlayAudio = async () => {
+            try {
+                // If we already have a src, just play (handle re-visible case if any)
+                if (audioRef.current.src) {
+                     if (!isMuted && audioRef.current.paused) {
+                        attemptPlay();
+                     }
+                     return;
+                }
+
+                const response = await fetch(`${backendUrl}/api/student/synthesize`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        text: introText,
+                        voiceId: "en-US-natalie",
+                    }),
+                });
+                
+                if (!isMounted.current) return;
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.audioUrl && isMounted.current) {
+                        audioRef.current.src = data.audioUrl;
+                        if (!isMuted) {
+                            attemptPlay();
+                        }
+                    }
+                }
+            } catch (err) {
+                console.error("Audio fetch failed", err);
+            }
+        };
+
+        fetchAndPlayAudio();
+    }, []);
+
+    const attemptPlay = () => {
+        audioRef.current.play().catch(e => {
+            console.log("Auto-play blocked, showing hint:", e);
+            setShowUnmuteHint(true);
+        });
+    };
+
+    // Handle Mute Toggle
+    useEffect(() => {
+        audioRef.current.muted = isMuted;
+        if (!isMuted && audioRef.current.paused && audioRef.current.src && isVisible) {
+            attemptPlay();
+        }
+        if (!isMuted) {
+            setShowUnmuteHint(false);
+        }
+    }, [isMuted, isVisible]);
+
+    // Handle Page Visibility (Pause on Tab Switch/Minimize)
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+             if (document.hidden) {
+                 audioRef.current.pause();
+             } else {
+                 // Optional: Resume if it was supposed to be playing and not muted?
+                 // For now, let's keep it simple: strict pause on hide. 
+                 // If we want to auto-resume, we need to track 'wasPlaying'.
+                 if (!isMuted && isVisible && isMounted.current && audioRef.current.paused && audioRef.current.currentTime > 0 && !audioRef.current.ended) {
+                     audioRef.current.play().catch(e => console.log("Resume failed", e));
+                 }
+             }
+        };
+
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        return () => {
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+        };
+    }, [isMuted, isVisible]);
+
+
     const handleContinue = () => {
         setIsVisible(false);
-        setTimeout(() => onContinue(), 300);
+        
+        // Smooth fade out
+        fadeOutInterval.current = setInterval(() => {
+            if (audioRef.current.volume > 0.1) {
+                audioRef.current.volume = Math.max(0, audioRef.current.volume - 0.1);
+            } else {
+                if (fadeOutInterval.current) clearInterval(fadeOutInterval.current);
+                audioRef.current.pause();
+            }
+        }, 50);
+        
+        setTimeout(() => {
+            if (fadeOutInterval.current) clearInterval(fadeOutInterval.current);
+            onContinue();
+        }, 300);
     };
 
     // Sparkle colors - purple/pink theme
@@ -55,6 +167,26 @@ const ProfileSetupIntro = ({ onContinue }) => {
             >
                 {/* Simple Glassmorphism Card */}
                 <div className="relative p-8 md:p-12 rounded-3xl backdrop-blur-2xl border-2 border-white/20 shadow-2xl text-center">
+                    
+                    {/* Mute Button */}
+                    <button 
+                        onClick={() => {
+                            setIsMuted(!isMuted);
+                            setShowUnmuteHint(false);
+                        }} 
+                        className="absolute top-6 right-6 text-white/60 hover:text-white transition-colors z-20 p-2 hover:bg-white/10 rounded-full group"
+                    >
+                        {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                        
+                        {/* Unmute Hint Tooltip */}
+                        {showUnmuteHint && (
+                            <div className="absolute top-full right-0 mt-2 px-3 py-1 bg-white text-black text-xs font-bold rounded-lg whitespace-nowrap animate-bounce shadow-lg">
+                                Tap to unmute 🔊
+                                <div className="absolute -top-1 right-3 w-2 h-2 bg-white rotate-45"></div>
+                            </div>
+                        )}
+                    </button>
+
                     {/* Title */}
                     <h1 className="text-3xl md:text-4xl lg:text-5xl font-black mb-6 leading-tight text-white">
                         Welcome to RankUp! 🎯
@@ -62,8 +194,7 @@ const ProfileSetupIntro = ({ onContinue }) => {
 
                     {/* Description */}
                     <p className="text-base md:text-lg text-white/90 font-medium mb-8 leading-relaxed max-w-lg mx-auto">
-                        Before you dive into the world of gamified learning, let's set up your profile.
-                        Choose your persona, pick your vibe, and get ready to level up your skills!
+                        {introText}
                     </p>
 
                     {/* Continue Button */}

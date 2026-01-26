@@ -1,13 +1,23 @@
-import React, { useState, useEffect } from "react";
-import { X, ChevronRight, ChevronLeft } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { X, ChevronRight, ChevronLeft, Volume2, VolumeX } from "lucide-react";
 import { welcomeSlides } from "../data/welcomeGuideData";
 import { useAuth } from "../context/AuthContext";
 
 const WelcomeGuide = ({ onComplete }) => {
+    // State & Refs
     const [currentSlide, setCurrentSlide] = useState(0);
     const [isVisible, setIsVisible] = useState(false);
     const { user } = useAuth();
+    const [isMuted, setIsMuted] = useState(false);
+    
+    // Refs
+    const audioRef = useRef(new Audio());
+    const audioCache = useRef({});
+    const isMounted = useRef(true);
+    const [isLoadingAudio, setIsLoadingAudio] = useState(false);
 
+    const backendUrl = import.meta.env.VITE_BACKEND_URL;
+    
     const slide = welcomeSlides[currentSlide];
     const isLastSlide = currentSlide === welcomeSlides.length - 1;
 
@@ -23,6 +33,109 @@ const WelcomeGuide = ({ onComplete }) => {
             document.body.style.overflow = "auto";
         };
     }, []);
+
+
+
+    // Helper to fetch audio URL (with caching)
+    const fetchAudioUrl = async (index) => {
+        if (audioCache.current[index]) {
+            return audioCache.current[index];
+        }
+
+        const slideData = welcomeSlides[index];
+        if (!slideData) return null;
+
+        try {
+            const response = await fetch(`${backendUrl}/api/student/synthesize`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    text: slideData.content,
+                    voiceId: "en-US-natalie",
+                }),
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.audioUrl) {
+                    audioCache.current[index] = data.audioUrl;
+                    return data.audioUrl;
+                }
+            }
+        } catch (error) {
+            console.error("Error generating voice:", error);
+        }
+        return null;
+    };
+
+    // Audio Playback & Pre-fetching
+    useEffect(() => {
+        if (!isVisible) return;
+
+        // Stop previous audio
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+
+        const playCurrentAndPreload = async () => {
+            if (!isMounted.current) return;
+            setIsLoadingAudio(true);
+            
+            // 1. Get/Fetch Current Slide Audio
+            const url = await fetchAudioUrl(currentSlide);
+            
+            if (url && isMounted.current) {
+                audioRef.current.src = url;
+                if (!isMuted) {
+                    audioRef.current.play().catch(e => console.log("Audio play failed:", e));
+                }
+            }
+            if (isMounted.current) setIsLoadingAudio(false);
+
+            // 2. Pre-fetch Next Slide Audio (Background)
+            if (currentSlide < welcomeSlides.length - 1 && isMounted.current) {
+                fetchAudioUrl(currentSlide + 1);
+            }
+        };
+
+        playCurrentAndPreload();
+
+        return () => {
+            audioRef.current.pause();
+        };
+    }, [currentSlide, isVisible, isMuted]);
+
+    // Handle isMounted
+    useEffect(() => {
+        isMounted.current = true;
+        return () => { isMounted.current = false; };
+    }, []);
+
+    // Update muted state immediately
+    useEffect(() => {
+        audioRef.current.muted = isMuted;
+        if (!isMuted && audioRef.current.paused && audioRef.current.src) {
+            audioRef.current.play().catch(e => console.log("Audio play failed:", e));
+        }
+    }, [isMuted]);
+
+    // Handle Page Visibility (Pause on Tab Switch/Minimize)
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+             if (document.hidden) {
+                 audioRef.current.pause();
+             } else {
+                 // Resume if valid state
+                 if (!isMuted && isVisible && isMounted.current && audioRef.current.paused && audioRef.current.currentTime > 0 && !audioRef.current.ended) {
+                     audioRef.current.play().catch(e => console.log("Resume failed", e));
+                 }
+             }
+        };
+
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        return () => {
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+        };
+    }, [isMuted, isVisible]);
 
     const handleNext = () => {
         if (currentSlide < welcomeSlides.length - 1) {
@@ -109,6 +222,12 @@ const WelcomeGuide = ({ onComplete }) => {
             >
                 {/* Simple Glassmorphism Card */}
                 <div className="relative p-6 md:p-10 rounded-3xl backdrop-blur-2xl border-2 border-white/20 shadow-2xl">
+                    <button 
+                        onClick={() => setIsMuted(!isMuted)} 
+                        className="absolute top-6 right-6 text-white/80 hover:text-white transition-colors z-20"
+                    >
+                        {isMuted ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
+                    </button>
                     {/* Title */}
                     <h2 className="text-2xl md:text-3xl lg:text-4xl font-black mb-4 text-left leading-tight text-white">
                         {slide.title}
