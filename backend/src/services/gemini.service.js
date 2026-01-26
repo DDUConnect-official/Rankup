@@ -1,9 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import dotenv from 'dotenv';
-
-dotenv.config();
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+import keyManager from '../utils/keyManager.js';
 
 /**
  * Generate quiz questions from level content using Gemini AI
@@ -15,6 +11,11 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
  */
 export const generateQuiz = async (contentArray, questionCount = 5, difficulty = 'medium', levelTitle = '') => {
     try {
+        // Get rotated key
+        const apiKey = keyManager.getNextKey('GEMINI');
+        if (!apiKey) throw new Error("Gemini API Key configuration missing");
+
+        const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
         // Combine content into single text, handling both strings and objects

@@ -56,7 +56,7 @@ router.post("/quiz/submit", async (req, res) => {
         let user;
         // Try finding by firebaseUid first
         user = await User.findOne({ uid: userId });
-        
+
         // If not found, and userId is email
         if (!user && userId.includes("@")) {
             user = await User.findOne({ email: userId });
@@ -66,23 +66,23 @@ router.post("/quiz/submit", async (req, res) => {
         if (!user && userId.match(/^[0-9a-fA-F]{24}$/)) {
             user = await User.findById(userId);
         }
-        
+
         if (!user) return res.status(404).json({ message: "User not found" });
 
         // Check if level already completed
         const alreadyCompleted = user.completedLevels.find(l => l.levelId.toString() === levelId);
-        
+
         if (!alreadyCompleted) {
-             const level = await Level.findById(levelId);
-             
-             user.totalScore += level.xpReward || 0;
-             user.completedLevels.push({
-                 levelId: levelId,
-                 quizScore: score
-             });
-             await user.save();
+            const level = await Level.findById(levelId);
+
+            user.totalScore += level.xpReward || 0;
+            user.completedLevels.push({
+                levelId: levelId,
+                quizScore: score
+            });
+            await user.save();
         }
-        
+
         res.json({ message: "Progress saved", totalScore: user.totalScore, alreadyCompleted: !!alreadyCompleted });
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -90,12 +90,13 @@ router.post("/quiz/submit", async (req, res) => {
 });
 
 // VOICE SYNTHESIS (MURF AI)
+import keyManager from "../utils/keyManager.js";
 const voiceCache = new Map();
 
 router.post("/synthesize", async (req, res) => {
     try {
         const { text, voiceId } = req.body;
-        
+
         // Check Cache first
         const cacheKey = `${voiceId}_${text?.trim()}`;
         if (voiceCache.has(cacheKey)) {
@@ -104,8 +105,9 @@ router.post("/synthesize", async (req, res) => {
         }
 
         console.log("Synthesize Request:", { text: text?.substring(0, 20) + "...", voiceId });
-        
-        if (!process.env.MURF_API_KEY) {
+
+        const apiKey = keyManager.getNextKey('MURF');
+        if (!apiKey) {
             return res.status(500).json({ message: "MURF_API_KEY not configured" });
         }
 
@@ -117,18 +119,18 @@ router.post("/synthesize", async (req, res) => {
             channel: 'MONO'
         }, {
             headers: {
-                'api-key': process.env.MURF_API_KEY,
+                'api-key': apiKey,
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
             }
         });
-        
+
         const audioUrl = response.data.audioFile;
         console.log("Murf API Response success. Audio URL:", audioUrl);
-        
+
         // Save to Cache
         voiceCache.set(cacheKey, audioUrl);
-        
+
         res.json({ audioUrl: audioUrl });
     } catch (err) {
         console.error("Murf AI Error Full:", err.response?.data || err.message);
