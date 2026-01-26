@@ -90,7 +90,7 @@ const Levels = () => {
                         levels.map((level, index) => (
                             <div key={level._id} className="group relative bg-black/40 border border-white/10 rounded-2xl p-4 md:p-6 backdrop-blur-xl overflow-hidden">
                                 {/* Decorative BG */}
-                                <div className={`absolute inset-0 bg-gradient-to-br`} />
+                                <div className={`absolute inset-0 bg-linear-to-br`} />
 
                                 <div className="relative z-10 flex flex-col h-full">
                                     <div className="flex justify-between items-start mb-4">

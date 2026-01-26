@@ -7,7 +7,7 @@ const ModuleProgressWidget = ({ totalLevels, levelsCompleted = 0, totalXp = 0 })
 
             {/* 1. The Shiny Border Layer (Masked, behind content) */}
             <div className="absolute inset-0 rounded-2xl z-0 mask-border pointer-events-none">
-                <div className="absolute inset-[-100%] bg-[conic-gradient(from_0deg_at_50%_50%,transparent_0%,transparent_45%,rgba(59,130,246,0.6)_50%,transparent_55%,transparent_100%)] animate-[spin_6s_linear_infinite]" />
+                <div className="absolute -inset-full bg-[conic-gradient(from_0deg_at_50%_50%,transparent_0%,transparent_45%,rgba(59,130,246,0.6)_50%,transparent_55%,transparent_100%)] animate-[spin_6s_linear_infinite]" />
             </div>
 
             {/* 2. The Transparent Content Layer */}

@@ -155,7 +155,7 @@ const VoiceAssistant = ({ context }) => {
                 <div className="relative w-full h-full bg-[#0a0a0a] border-2 border-blue-500/50 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.3)] group-hover:shadow-[0_0_30px_rgba(59,130,246,0.6)] group-hover:border-blue-400 transition-all overflow-hidden">
 
                     {/* Inner sheen effect */}
-                    <div className="absolute inset-0 bg-gradient-to-tr from-blue-600/20 to-purple-600/20" />
+                    <div className="absolute inset-0 bg-linear-to-tr from-blue-600/20 to-purple-600/20" />
 
                     {/* Icon */}
                     <div className="relative z-10 text-blue-400 group-hover:text-blue-100 transition-colors">
@@ -172,7 +172,7 @@ const VoiceAssistant = ({ context }) => {
             <div className="bg-[#0a0a0a]/95 backdrop-blur-xl border border-blue-500/30 rounded-2xl shadow-[0_0_40px_rgba(59,130,246,0.2)] overflow-hidden relative">
 
                 {/* Decorative Tech Lines */}
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-600 via-cyan-400 to-blue-600" />
+                <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-blue-600 via-cyan-400 to-blue-600" />
                 <div className="absolute bottom-0 right-0 w-20 h-20 bg-blue-500/5 rounded-full blur-2xl" />
 
                 {/* Header */}
@@ -228,7 +228,7 @@ const VoiceAssistant = ({ context }) => {
                         {status === 'listening' && (
                             <div className="flex justify-center items-center gap-1.5 h-12 mt-4">
                                 {[1, 2, 3, 4, 5, 6, 7].map(i => (
-                                    <div key={i} className="w-1 bg-gradient-to-t from-red-500 to-pink-500 rounded-full animate-wave" style={{ height: `${Math.random() * 25 + 10}px`, animationDelay: `-${i * 0.15}s` }} />
+                                    <div key={i} className="w-1 bg-linear-to-t from-red-500 to-pink-500 rounded-full animate-wave" style={{ height: `${Math.random() * 25 + 10}px`, animationDelay: `-${i * 0.15}s` }} />
                                 ))}
                             </div>
                         )}

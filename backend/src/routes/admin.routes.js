@@ -71,6 +71,24 @@ router.get("/levels/:moduleId", async (req, res) => {
 
 router.post("/level", async (req, res) => {
     try {
+        const { moduleId, levelNumber } = req.body;
+
+        // If levelNumber is provided, checks for conflicts and shifts others
+        if (levelNumber) {
+            const existingLevel = await Level.findOne({ moduleId, levelNumber });
+            if (existingLevel) {
+                // Shift all levels with >= levelNumber up by 1
+                await Level.updateMany(
+                    { moduleId, levelNumber: { $gte: levelNumber } },
+                    { $inc: { levelNumber: 1 } }
+                );
+            }
+        } else {
+            // Logic to auto-assign next number if not provided (optional, frontend usually sends it)
+            const lastLevel = await Level.findOne({ moduleId }).sort("-levelNumber");
+            req.body.levelNumber = lastLevel ? lastLevel.levelNumber + 1 : 1;
+        }
+
         const level = new Level(req.body);
         const saved = await level.save();
         res.status(201).json(saved);
@@ -81,6 +99,8 @@ router.post("/level", async (req, res) => {
 
 router.put("/level/:id", async (req, res) => {
     try {
+        // Advanced: If level number changes, we might need complex reordering logic here too
+        // For now, simpler update. Backend shifting relies on POST mainly for insertion.
         const updated = await Level.findByIdAndUpdate(req.params.id, req.body, { new: true });
         res.json(updated);
     } catch (err) {
@@ -90,6 +110,15 @@ router.put("/level/:id", async (req, res) => {
 
 router.delete("/level/:id", async (req, res) => {
     try {
+        const level = await Level.findById(req.params.id);
+        if (level) {
+            // Shift levels down to fill gap? Optional but good practice.
+            await Level.updateMany(
+                { moduleId: level.moduleId, levelNumber: { $gt: level.levelNumber } },
+                { $inc: { levelNumber: -1 } }
+            );
+        }
+
         await Level.findByIdAndDelete(req.params.id);
         // Optionally delete associated quiz/game
         await Quiz.findOneAndDelete({ levelId: req.params.id });
@@ -157,7 +186,7 @@ router.get("/game/:levelId", async (req, res) => {
 // --- AI Quiz Generation Route ---
 router.post("/quiz/generate", async (req, res) => {
     try {
-        const { content, questionCount = 5 } = req.body;
+        const { content, questionCount = 5, difficulty = 'medium', levelTitle } = req.body;
 
         // Validate input
         if (!content || !Array.isArray(content) || content.length === 0) {
@@ -167,7 +196,7 @@ router.post("/quiz/generate", async (req, res) => {
         }
 
         // Generate quiz using Gemini
-        const questions = await generateQuiz(content, questionCount);
+        const questions = await generateQuiz(content, questionCount, difficulty, levelTitle);
 
         res.json({
             success: true,

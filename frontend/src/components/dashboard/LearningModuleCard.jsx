@@ -30,10 +30,10 @@ const LearningModuleCard = ({ module }) => {
                     </div>
                 </div>
 
-                <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-gray-400 transition-all">
+                <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-linear-to-r group-hover:from-white group-hover:to-gray-400 transition-all">
                     {module.title}
                 </h3>
-                <p className="text-white/60 mb-6 flex-grow">
+                <p className="text-white/60 mb-6 grow">
                     {module.description}
                 </p>
 

@@ -7,19 +7,26 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 /**
  * Generate quiz questions from level content using Gemini AI
- * @param {Array<string>} contentArray - Array of paragraph strings
+ * @param {Array<string|object>} contentArray - Array of paragraph strings or objects
  * @param {number} questionCount - Number of questions to generate (default: 5)
+ * @param {string} difficulty - Difficulty level (easy, medium, hard) - default: 'medium'
+ * @param {string} levelTitle - Title of the level for context
  * @returns {Promise<Array>} Generated quiz questions
  */
-export const generateQuiz = async (contentArray, questionCount = 5) => {
+export const generateQuiz = async (contentArray, questionCount = 5, difficulty = 'medium', levelTitle = '') => {
     try {
         const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
-        // Combine content into single text
-        const contentText = contentArray.join('\n\n');
+        // Combine content into single text, handling both strings and objects
+        const contentText = contentArray.map(item => {
+            if (typeof item === 'string') return item;
+            return `${item.title ? item.title + ': ' : ''}${item.data}`;
+        }).join('\n\n');
 
         // Create prompt for Gemini
         const prompt = `Based on the following educational content, generate ${questionCount} multiple-choice quiz questions. 
+        Topic: ${levelTitle}
+        Difficulty Level: ${difficulty.toUpperCase()}.
 
 Content:
 ${contentText}

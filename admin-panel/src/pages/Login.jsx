@@ -43,7 +43,7 @@ const Login = () => {
                     <div className="w-16 h-16 bg-blue-600/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-blue-500/30">
                         <Lock className="text-blue-500" size={32} />
                     </div>
-                    <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-white to-gray-500 bg-clip-text text-transparent">RankUp Admin</h1>
+                    <h1 className="text-3xl font-bold mb-2 bg-linear-to-r from-white to-gray-500 bg-clip-text text-transparent">RankUp Admin</h1>
                     <p className="text-gray-500 text-sm">Secure Content Management System</p>
                 </div>
 

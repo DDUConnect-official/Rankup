@@ -12,7 +12,7 @@ import Module from "./models/Module.js";
 dotenv.config();
 
 const seedModules = async () => {
-    const modules = ["Maths", "Science", "Coding"];
+    const modules = ["JavaScript", "Python", "HTML/CSS"];
     for (const name of modules) {
         await Module.findOneAndUpdate(
             { name },

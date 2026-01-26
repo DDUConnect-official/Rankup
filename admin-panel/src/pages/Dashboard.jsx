@@ -2,7 +2,8 @@
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import RankUpLogo from '../assets/RankUp_Logo.png';
-import { Plus, Save, Trash2, Book, Gamepad, HelpCircle, CheckCircle, Circle, X, Menu, Pencil } from 'lucide-react';
+import { Plus, Save, Trash2, Book, Gamepad, HelpCircle, CheckCircle, Circle, X, Menu, Pencil, Bot } from 'lucide-react';
+import ConfirmModal from '../components/ConfirmModal';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -15,10 +16,18 @@ const Dashboard = () => {
   const [showModules, setShowModules] = useState(false);
   const [users, setUsers] = useState([]);
   const [viewMode, setViewMode] = useState('modules'); // 'modules' or 'users'
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false, title: '', message: '', onConfirm: null, isDanger: false
+  });
 
   const [levelForm, setLevelForm] = useState({
-    title: '', description: '', xpReward: 50, hasGame: false, hasQuiz: false, isPublished: false,
-    content: ['']  // Simple array of paragraph strings
+    title: '', levelNumber: 1, description: '', xpReward: 50, hasGame: false, hasQuiz: false, isPublished: false,
+    content: [{ type: 'paragraph', title: '', data: '' }]
+  });
+
+  const [quizSettings, setQuizSettings] = useState({
+    questionCount: 5,
+    difficulty: 'medium'
   });
 
   const [quizForm, setQuizForm] = useState({
@@ -95,24 +104,45 @@ const Dashboard = () => {
     } catch (err) { alert('Error: ' + err.message); }
   };
 
-  const deleteLevel = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this level?")) return;
-    try {
-      await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/admin/level/${id}`, { headers: { email: user.email } });
-      loadLevels();
-    } catch (err) { alert('Error: ' + err.message); }
+  const deleteLevel = (id) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Level?',
+      message: 'This action cannot be undone. All associated content will be permanently removed.',
+      isDanger: true,
+      onConfirm: async () => {
+        try {
+          await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/admin/level/${id}`, { headers: { email: user.email } });
+          loadLevels();
+        } catch (err) { alert('Error: ' + err.message); }
+      }
+    });
   };
 
   const editLevel = async (level) => {
     setActiveLevel(level._id);
+
+    // Handl migration of old string-only content to new structure on the fly
+    let formattedContent = [];
+    if (level.content && level.content.length > 0) {
+      if (typeof level.content[0] === 'string') {
+        formattedContent = level.content.map(text => ({ type: 'paragraph', title: '', data: text }));
+      } else {
+        formattedContent = level.content;
+      }
+    } else {
+      formattedContent = [{ type: 'paragraph', title: '', data: '' }];
+    }
+
     setLevelForm({
       title: level.title,
+      levelNumber: level.levelNumber || 1,
       description: level.description,
       xpReward: level.xpReward,
       hasGame: level.hasGame,
       hasQuiz: level.hasQuiz,
       isPublished: level.isPublished,
-      content: level.content || ['']  // Simple array of strings
+      content: formattedContent
     });
     // Fetch quiz
     setQuizForm({ questions: [{ question: '', options: ['', '', '', ''], correctAnswer: '' }], passingScore: 70 });
@@ -140,15 +170,22 @@ const Dashboard = () => {
   };
 
   const resetFields = () => {
-    setLevelForm({ title: '', description: '', xpReward: 50, hasGame: false, hasQuiz: false, isPublished: false, content: [''] });  // Simple array
+    setLevelForm({ title: '', description: '', xpReward: 50, hasGame: false, hasQuiz: false, isPublished: false, content: [{ type: 'paragraph', title: '', data: '' }] });
     setQuizForm({ questions: [{ question: '', options: ['', '', '', ''], correctAnswer: '' }], passingScore: 70 });
     setGameForm({ name: '', type: 'logic', difficulty: 'easy', instructions: '', xpReward: 50 });
     setFormTab('theory');
   };
 
-  const addParagraph = () => setLevelForm({ ...levelForm, content: [...levelForm.content, ''] });
-  const updateParagraph = (idx, value) => { const n = [...levelForm.content]; n[idx] = value; setLevelForm({ ...levelForm, content: n }); };
-  const removeParagraph = (idx) => setLevelForm({ ...levelForm, content: levelForm.content.filter((_, i) => i !== idx) });
+  const addContentBlock = (type = 'paragraph') => setLevelForm({ ...levelForm, content: [...levelForm.content, { type, title: '', data: '' }] });
+
+  const updateContentBlock = (idx, field, value) => {
+    const n = [...levelForm.content];
+    n[idx][field] = value;
+    setLevelForm({ ...levelForm, content: n });
+  };
+
+  const removeContentBlock = (idx) => setLevelForm({ ...levelForm, content: levelForm.content.filter((_, i) => i !== idx) });
+
   const addQuestion = () => setQuizForm({ ...quizForm, questions: [...quizForm.questions, { question: '', options: ['', '', '', ''], correctAnswer: '' }] });
   const updateQuestion = (qIdx, field, value) => { const n = [...quizForm.questions]; n[qIdx][field] = value; setQuizForm({ ...quizForm, questions: n }); };
   const updateOption = (qIdx, oIdx, value) => { const n = [...quizForm.questions]; n[qIdx].options[oIdx] = value; setQuizForm({ ...quizForm, questions: n }); };
@@ -157,47 +194,44 @@ const Dashboard = () => {
   const removeQuestion = (qIdx) => setQuizForm({ ...quizForm, questions: quizForm.questions.filter((_, i) => i !== qIdx) });
 
   const generateQuizWithAI = async () => {
-    if (levelForm.content.length === 0 || levelForm.content[0] === '') {
-      alert('Please add level content first before generating quiz.');
+    if (levelForm.content.length === 0 || (!levelForm.content[0].data && !levelForm.content[0].title)) {
+      alert('Please add level content (text) first before generating quiz.');
       return;
     }
 
-    if (!window.confirm('Generate quiz questions using AI? This will replace any existing questions.')) {
-      return;
-    }
+    setConfirmModal({
+      isOpen: true,
+      title: 'Generate Quiz?',
+      message: 'This will use Gemini AI to generate new questions based on your content. Any existing questions will be replaced.',
+      isDanger: false,
+      onConfirm: async () => {
+        setGeneratingQuiz(true);
+        try {
+          const res = await axios.post(
+            `${import.meta.env.VITE_BACKEND_URL}/api/admin/quiz/generate`,
+            {
+              content: levelForm.content,
+              questionCount: quizSettings.questionCount,
+              difficulty: quizSettings.difficulty,
+              levelTitle: levelForm.title
+            },
+            { headers: { email: user.email } }
+          );
 
-    setGeneratingQuiz(true);
-
-    try {
-      const res = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/api/admin/quiz/generate`,
-        {
-          content: levelForm.content,
-          questionCount: 5
-        },
-        { headers: { email: user.email } }
-      );
-
-      if (res.data.success) {
-        // Update quiz form with generated questions
-        setQuizForm({
-          ...quizForm,
-          questions: res.data.questions
-        });
-
-        // Switch to quiz tab and enable quiz
-        setFormTab('quiz');
-        setLevelForm({ ...levelForm, hasQuiz: true });
-
-        alert(`✅ Successfully generated ${res.data.count} quiz questions!`);
+          if (res.data.success) {
+            setQuizForm({ ...quizForm, questions: res.data.questions });
+            setFormTab('quiz');
+            setLevelForm(prev => ({ ...prev, hasQuiz: true }));
+            // Optional: Success toast here
+          }
+        } catch (err) {
+          console.error('Quiz generation error:', err);
+          alert(`Failed to generate quiz: ${err.response?.data?.message || err.message}`);
+        } finally {
+          setGeneratingQuiz(false);
+        }
       }
-
-    } catch (err) {
-      console.error('Quiz generation error:', err);
-      alert(`Failed to generate quiz: ${err.response?.data?.message || err.message}`);
-    } finally {
-      setGeneratingQuiz(false);
-    }
+    });
   };
 
   if (loading) return <div className='min-h-screen bg-zinc-950 flex items-center justify-center text-zinc-500'>Loading...</div>;
@@ -347,8 +381,8 @@ const Dashboard = () => {
                     {levels.length === 0 && <div className='p-6 md:p-10 text-center text-[10px] md:text-xs text-zinc-600 font-bold'>No levels found</div>}
                   </div>
                 ) : (
-                  <div className='bg-zinc-900/80 border border-zinc-900 rounded-lg overflow-hidden shadow-2xl'>
-                    <div className='border-b border-zinc-900 flex bg-zinc-950/50 overflow-x-auto'>
+                  <div className='bg-zinc-900/80 border border-zinc-900 rounded-lg shadow-2xl'>
+                    <div className='border-b border-zinc-900 flex bg-zinc-950/50 overflow-x-auto rounded-t-lg'>
                       {['theory', 'quiz', 'game'].map(t => (
                         <button key={t} onClick={() => setFormTab(t)} className={`px-3 md:px-6 py-2 md:py-3 text-[9px] md:text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap cursor-pointer ${formTab === t ? 'text-white border-b-2 border-white' : 'text-zinc-700 hover:text-zinc-400'}`}>
                           {t === 'theory' && <><Book size={10} className='inline mr-1 md:mr-2 md:w-3 md:h-3' /> Theory</>}
@@ -363,40 +397,78 @@ const Dashboard = () => {
 
                     <div className='p-3 md:p-8 space-y-4 md:space-y-6'>
                       {formTab === 'theory' && (
-                        <div className='space-y-4 md:space-y-6 max-w-2xl'>
+                        <div className='space-y-4 md:space-y-6 w-full'>
                           <div className='flex flex-col md:flex-row gap-3 md:gap-4'>
+                            <div className='w-20 md:w-24 shrink-0'>
+                              <label className='text-[8px] md:text-[9px] font-bold text-zinc-700 uppercase block mb-1 md:mb-1.5'>Level #</label>
+                              <input type='number' value={levelForm.levelNumber} onChange={e => setLevelForm({ ...levelForm, levelNumber: parseInt(e.target.value) })} className='w-full bg-zinc-950 border border-zinc-900 p-2 md:p-3 rounded text-xs md:text-sm outline-none focus:border-zinc-700 font-mono text-center' />
+                            </div>
                             <div className='flex-1'>
                               <label className='text-[8px] md:text-[9px] font-bold text-zinc-700 uppercase block mb-1 md:mb-1.5'>Level Title</label>
-                              <input type='text' value={levelForm.title} onChange={e => setLevelForm({ ...levelForm, title: e.target.value })} className='w-full bg-zinc-950 border border-zinc-900 p-2 md:p-3 rounded text-xs md:text-sm outline-none focus:border-zinc-700' placeholder='e.g., Intro to Algebra' />
+                              <input type='text' value={levelForm.title} onChange={e => setLevelForm({ ...levelForm, title: e.target.value })} className='w-full bg-zinc-950 border border-zinc-900 p-2 md:p-3 rounded text-xs md:text-sm outline-none focus:border-zinc-700' placeholder='e.g., Intro to JavaScript Variables' />
                             </div>
-                            <div className='w-20 md:w-24'>
+                            <div className='w-20 md:w-24 shrink-0'>
                               <label className='text-[8px] md:text-[9px] font-bold text-zinc-700 uppercase block mb-1 md:mb-1.5'>XP</label>
                               <input type='number' value={levelForm.xpReward} onChange={e => setLevelForm({ ...levelForm, xpReward: parseInt(e.target.value) })} className='w-full bg-zinc-950 border border-zinc-900 p-2 md:p-3 rounded text-xs md:text-sm outline-none focus:border-zinc-700' />
                             </div>
                           </div>
                           <div>
                             <label className='text-[8px] md:text-[9px] font-bold text-zinc-700 uppercase block mb-1 md:mb-1.5'>Description</label>
-                            <textarea value={levelForm.description} onChange={e => setLevelForm({ ...levelForm, description: e.target.value })} className='w-full bg-zinc-950 border border-zinc-900 p-2 md:p-3 rounded text-xs md:text-sm h-20 md:h-24 outline-none resize-none focus:border-zinc-700' placeholder='Brief description...' />
+                            <textarea value={levelForm.description} onChange={e => setLevelForm({ ...levelForm, description: e.target.value })} className='w-full bg-zinc-950 border border-zinc-900 p-2 md:p-3 rounded text-xs md:text-sm h-20 md:h-24 outline-none resize-none focus:border-zinc-700' placeholder='Brief description of this coding level...' />
                           </div>
-                          <div className='space-y-2 md:space-y-3'>
-                            <div className='flex justify-between items-center'>
-                              <span className='text-[8px] md:text-[9px] font-bold text-zinc-700 uppercase tracking-widest'>Content (Paragraphs)</span>
-                              <button onClick={addParagraph} className='text-[8px] md:text-[9px] font-bold bg-zinc-800 hover:bg-zinc-700 px-2 md:px-3 py-1 md:py-1.5 rounded transition-all cursor-pointer'>+ Add Paragraph</button>
+
+                          {/* Content Blocks Section with Sticky Header */}
+                          <div className='space-y-4 md:space-y-6 w-full relative'>
+                            <div className='flex justify-between items-center border-b border-zinc-900 pb-2 sticky top-0 bg-zinc-950/95 backdrop-blur z-20 p-2'>
+                              <span className='text-[8px] md:text-[9px] font-bold text-zinc-700 uppercase tracking-widest'>Content Blocks</span>
+                              <div className='flex gap-2'>
+                                <button onClick={() => addContentBlock('paragraph')} className='text-[8px] md:text-[9px] font-bold bg-zinc-800 hover:bg-zinc-700 px-2 md:px-3 py-1 md:py-1.5 rounded transition-all cursor-pointer'>+ Para</button>
+                                <button onClick={() => addContentBlock('bullet')} className='text-[8px] md:text-[9px] font-bold bg-zinc-800 hover:bg-zinc-700 px-2 md:px-3 py-1 md:py-1.5 rounded transition-all cursor-pointer'>+ List</button>
+                                <button onClick={() => addContentBlock('example')} className='text-[8px] md:text-[9px] font-bold bg-zinc-800 hover:bg-zinc-700 px-2 md:px-3 py-1 md:py-1.5 rounded transition-all cursor-pointer'>+ Example</button>
+                              </div>
                             </div>
-                            {levelForm.content.map((paragraph, i) => (
-                              <div key={i} className='flex gap-1 md:gap-2 items-start'>
+
+                            {levelForm.content.map((block, i) => (
+                              <div key={i} className='bg-zinc-900/30 border border-zinc-900/60 rounded-lg flex flex-col gap-3'>
+                                <div className='flex gap-2 md:gap-3 items-center'>
+                                  <div className='w-24 shrink-0'>
+                                    <select
+                                      value={block.type}
+                                      onChange={e => updateContentBlock(i, 'type', e.target.value)}
+                                      className='w-full bg-zinc-950 border border-zinc-900 p-1.5 md:p-2 rounded text-[10px] md:text-xs outline-none focus:border-zinc-700 uppercase font-bold text-zinc-500'
+                                    >
+                                      <option value="paragraph">¶ Para</option>
+                                      <option value="bullet">• List</option>
+                                      <option value="example">{ } Code</option>
+                                    </select>
+                                  </div>
+                                  <div className='flex-1'>
+                                    <input
+                                      type='text'
+                                      value={block.title}
+                                      onChange={e => updateContentBlock(i, 'title', e.target.value)}
+                                      className='w-full bg-zinc-950 border border-zinc-900 p-1.5 md:p-2 rounded text-[10px] md:text-xs outline-none focus:border-zinc-700'
+                                      placeholder='Optional content title...'
+                                    />
+                                  </div>
+                                  <button onClick={() => removeContentBlock(i)} className='text-zinc-700 hover:text-red-500 transition-colors cursor-pointer p-1'>
+                                    <Trash2 size={14} />
+                                  </button>
+                                </div>
                                 <textarea
-                                  value={paragraph}
-                                  onChange={e => updateParagraph(i, e.target.value)}
-                                  className='flex-1 bg-zinc-950 border border-zinc-900 p-2 md:p-3 rounded text-xs md:text-sm h-32 md:h-40 outline-none resize-vertical'
-                                  placeholder='Enter paragraph content. Write complete sentences that will be stored directly in the database.'
+                                  value={block.data}
+                                  onChange={e => updateContentBlock(i, 'data', e.target.value)}
+                                  className='w-full bg-zinc-950 border border-zinc-900 p-2 md:p-3 rounded text-xs md:text-sm h-24 md:h-32 outline-none resize-vertical font-mono focus:border-zinc-700 transition-colors'
+                                  placeholder={
+                                    block.type === 'bullet' ? 'Enter items separated by new lines...' :
+                                      block.type === 'example' ? 'Enter code or example text...' :
+                                        'Enter paragraph content...'
+                                  }
                                 />
-                                <button onClick={() => removeParagraph(i)} className='text-zinc-800 hover:text-red-500 transition-colors cursor-pointer mt-2'>
-                                  <Trash2 size={12} className='md:w-3.5 md:h-3.5' />
-                                </button>
                               </div>
                             ))}
                           </div>
+
                           <div className='flex flex-col md:flex-row gap-3 md:gap-6 pt-3 md:pt-4 border-t border-zinc-900'>
                             <label className='flex items-center gap-2 md:gap-3 cursor-pointer'>
                               <input type='checkbox' checked={levelForm.hasQuiz} onChange={e => setLevelForm({ ...levelForm, hasQuiz: e.target.checked })} className='w-3 h-3 md:w-4 md:h-4' />
@@ -415,34 +487,66 @@ const Dashboard = () => {
                       )}
 
                       {formTab === 'quiz' && (
-                        <div className='space-y-4 md:space-y-6 max-w-2xl'>
-                          <div className='flex justify-between items-center p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg mb-4'>
-                            <div>
-                              <p className='text-xs md:text-sm font-bold text-blue-300 mb-1'>
-                                🤖 AI-Powered Quiz Generation
-                              </p>
-                              <p className='text-[9px] md:text-[10px] text-blue-400/60'>
-                                Automatically generate quiz questions from your level content using Gemini AI
-                              </p>
+                        <div className='space-y-4 md:space-y-6 w-full'>
+                          {/* Professional AI Card */}
+                          <div className='p-6 bg-zinc-900/40 border border-zinc-800 rounded-xl mb-6 relative overflow-hidden group'>
+                            <div className='absolute top-0 right-0 p-32 bg-blue-500/5 blur-3xl rounded-full -mr-16 -mt-16 pointer-events-none' />
+
+                            <div className='flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 relative z-10'>
+                              <div>
+                                <p className='text-sm md:text-base font-bold text-zinc-200 mb-1 flex items-center gap-2'>
+                                  <Bot size={18} className="text-blue-500" />
+                                  Quiz Generator
+                                </p>
+                                <p className='text-xs text-zinc-500 max-w-md'>
+                                  Leverage AI to create relevant questions from your content.
+                                </p>
+                              </div>
+                              <button
+                                onClick={generateQuizWithAI}
+                                disabled={generatingQuiz || levelForm.content.length === 0}
+                                className='px-5 py-2 bg-white text-black hover:bg-zinc-200 disabled:bg-zinc-800 disabled:text-zinc-600 text-xs font-bold rounded shadow-xl transition-all flex items-center gap-2 cursor-pointer'
+                              >
+                                {generatingQuiz ? <div className='w-3 h-3 border-2 border-zinc-400 border-t-black rounded-full animate-spin' /> : <span className="text-blue-600 text-sm">✦</span>}
+                                {generatingQuiz ? 'Processing...' : 'Generate'}
+                              </button>
                             </div>
-                            <button
-                              onClick={generateQuizWithAI}
-                              disabled={generatingQuiz || levelForm.content.length === 0}
-                              className='px-4 md:px-6 py-2 md:py-3 bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-700 disabled:cursor-not-allowed text-white text-[10px] md:text-xs font-bold rounded-lg transition-all flex items-center gap-2 cursor-pointer shadow-lg hover:shadow-blue-500/20'
-                            >
-                              {generatingQuiz ? (
-                                <>
-                                  <div className='w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin' />
-                                  Generating...
-                                </>
-                              ) : (
-                                <>
-                                  <span className="text-sm">✨</span>
-                                  Generate Quiz
-                                </>
-                              )}
-                            </button>
+
+                            <div className='grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10'>
+                              <div>
+                                <div className="flex justify-between items-center mb-3">
+                                  <label className='text-[10px] font-bold text-zinc-500 uppercase tracking-wider'>Questions</label>
+                                  <span className="text-xs font-mono text-zinc-300 bg-zinc-800 px-2 py-0.5 rounded">{quizSettings.questionCount}</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  min="4"
+                                  max="8"
+                                  value={quizSettings.questionCount}
+                                  onChange={(e) => setQuizSettings({ ...quizSettings, questionCount: parseInt(e.target.value) })}
+                                  className="w-full h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-white"
+                                />
+                                <div className="flex justify-between text-[8px] text-zinc-600 mt-2 font-mono uppercase">
+                                  <span>Min (4)</span><span>Max (8)</span>
+                                </div>
+                              </div>
+                              <div>
+                                <label className='text-[10px] font-bold text-zinc-500 uppercase tracking-wider block mb-3'>Difficulty</label>
+                                <div className="flex bg-zinc-950 p-1 rounded-lg border border-zinc-900">
+                                  {['easy', 'medium', 'hard'].map(d => (
+                                    <button
+                                      key={d}
+                                      onClick={() => setQuizSettings({ ...quizSettings, difficulty: d })}
+                                      className={`flex-1 py-1.5 text-[9px] uppercase font-bold rounded transition-all cursor-pointer ${quizSettings.difficulty === d ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+                                    >
+                                      {d}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
                           </div>
+
                           {levelForm.hasQuiz ? (
                             <>
                               {quizForm.questions.map((q, qIdx) => (
@@ -503,9 +607,16 @@ const Dashboard = () => {
             </div>
           )}
         </main>
+        <ConfirmModal
+          isOpen={confirmModal.isOpen}
+          onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+          onConfirm={confirmModal.onConfirm}
+          title={confirmModal.title}
+          message={confirmModal.message}
+          isDanger={confirmModal.isDanger}
+        />
       </div>
     </div>
   );
 };
-
 export default Dashboard;

@@ -138,7 +138,7 @@ const ProfileSetup = () => {
       <div className="w-full min-h-screen flex items-center justify-center py-10 overflow-x-hidden relative">
 
         {/* Logout Popover (Top Right Corner of Page) */}
-        <div className="absolute top-6 md:top-8 right-0 z-[100] flex flex-col items-end">
+        <div className="absolute top-6 md:top-8 right-0 z-100 flex flex-col items-end">
           <button
             onClick={() => setShowLogoutModal(!showLogoutModal)}
             className={`px-4 py-2 border rounded-lg text-xs font-bold uppercase tracking-widest transition-all cursor-pointer flex items-center gap-2 ${showLogoutModal
@@ -181,7 +181,7 @@ const ProfileSetup = () => {
 
             {/* Progress Circle */}
             <div className="relative w-10 h-10">
-              <svg className="w-full h-full rotate-[-90deg]">
+              <svg className="w-full h-full -rotate-90">
                 <circle
                   cx="20"
                   cy="20"

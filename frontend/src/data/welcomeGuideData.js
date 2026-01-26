@@ -10,7 +10,7 @@ export const welcomeSlides = [
     {
         id: 2,
         title: "Learn by Playing 🎮",
-        content: "Forget boring textbooks! Dive into Maths, Science, and Coding modules designed like game missions. Complete challenges, earn XP, and watch yourself grow. Every problem you solve is a step closer to mastery!",
+        content: "Forget boring textbooks! Dive into JavaScript, Python, and HTML/CSS modules designed like game missions. Complete challenges, earn XP, and watch yourself grow. Every problem you solve is a step closer to mastery!",
         avatar: "https://res.cloudinary.com/dksb0nx42/image/upload/v1768674347/welcome_Slide2-removebg-preview_vruak2.png",
         color: "#3B82F6", // Blue
     },

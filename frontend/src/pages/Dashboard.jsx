@@ -17,21 +17,21 @@ const Dashboard = () => {
   const [dynamicModules, setDynamicModules] = useState([]);
 
   const iconMap = {
-    maths: <Calculator className="w-8 h-8 text-purple-400" />,
-    science: <Atom className="w-8 h-8 text-emerald-400" />,
-    coding: <Code2 className="w-8 h-8 text-orange-400" />,
+    javascript: <Code2 className="w-8 h-8 text-yellow-400" />,
+    python: <Bot className="w-8 h-8 text-blue-400" />, // Using Bot icon for Python temporarily or find a better match
+    "html/css": <Atom className="w-8 h-8 text-orange-400" />,
   };
 
   const gradientMap = {
-    maths: "from-purple-500 to-indigo-500",
-    science: "from-emerald-400 to-cyan-500",
-    coding: "from-orange-400 to-amber-500",
+    javascript: "from-yellow-400 to-yellow-600",
+    python: "from-blue-400 to-blue-600",
+    "html/css": "from-orange-400 to-red-500",
   };
 
   const delayMap = {
-    maths: "delay-[0ms]",
-    science: "delay-[100ms]",
-    coding: "delay-[200ms]",
+    javascript: "delay-[0ms]",
+    python: "delay-[100ms]",
+    "html/css": "delay-[200ms]",
   };
 
   useEffect(() => {
@@ -46,10 +46,10 @@ const Dashboard = () => {
         const formatted = res.data.map(m => ({
           id: m.name.toLowerCase(),
           title: `${m.name} Zone`,
-          description: m.name === "Maths" ? "Master algorithms, logic, and complex problem-solving." :
-            m.name === "Science" ? "Explore physics simulations and chemical reactions." :
-              "Build real-world projects and master new languages.",
-          icon: iconMap[m.name.toLowerCase()] || <Calculator />,
+          description: m.name === "JavaScript" ? "Master the language of the web." :
+            m.name === "Python" ? "Dive into data science and AI." :
+              "Build beautiful layouts with HTML & CSS.",
+          icon: iconMap[m.name.toLowerCase()] || <Code2 />,
           gradient: gradientMap[m.name.toLowerCase()] || "from-blue-500 to-indigo-500",
           delay: delayMap[m.name.toLowerCase()] || "delay-[0ms]",
           dbId: m._id
@@ -104,7 +104,7 @@ const Dashboard = () => {
             {/* Welcome Text */}
             <div className="w-full md:w-auto text-left">
               <h1 className="text-4xl md:text-5xl font-bold text-white mb-2 tracking-tight">
-                {greeting}, <span className="bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent animate-text-shine bg-[length:200%_auto]">{profileData?.username || "Ranker"}</span>
+                {greeting}, <span className="bg-linear-to-r from-blue-400 via-purple-500 to-pink-500 bg-clip-text text-transparent animate-text-shine bg-size-[200%_auto]">{profileData?.username || "Ranker"}</span>
               </h1>
               <p className="text-white/50 text-lg">Ready to level up your skills today?</p>
             </div>

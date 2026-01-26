@@ -25,12 +25,12 @@ const CareerAgentCard = ({ careerModule }) => {
         >
             {/* Corner Shine Effects */}
             <div className="absolute top-0 right-0 w-32 h-32 pointer-events-none overflow-hidden z-0 opacity-50 group-hover:opacity-100 transition-opacity duration-500">
-                <div className="absolute top-0 right-0 w-full h-[2px] bg-gradient-to-l from-purple-500 via-pink-500 to-transparent animate-pulse"></div>
-                <div className="absolute top-0 right-0 w-[2px] h-full bg-gradient-to-b from-purple-500 via-pink-500 to-transparent animate-pulse"></div>
+                <div className="absolute top-0 right-0 w-full h-[2px] bg-linear-to-l from-purple-500 via-pink-500 to-transparent animate-pulse"></div>
+                <div className="absolute top-0 right-0 w-[2px] h-full bg-linear-to-b from-purple-500 via-pink-500 to-transparent animate-pulse"></div>
             </div>
             <div className="absolute bottom-0 left-0 w-32 h-32 pointer-events-none overflow-hidden z-0 opacity-50 group-hover:opacity-100 transition-opacity duration-500">
-                <div className="absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r from-blue-500 via-cyan-500 to-transparent animate-pulse"></div>
-                <div className="absolute bottom-0 left-0 w-[2px] h-full bg-gradient-to-t from-blue-500 via-cyan-500 to-transparent animate-pulse"></div>
+                <div className="absolute bottom-0 left-0 w-full h-[2px] bg-linear-to-r from-blue-500 via-cyan-500 to-transparent animate-pulse"></div>
+                <div className="absolute bottom-0 left-0 w-[2px] h-full bg-linear-to-t from-blue-500 via-cyan-500 to-transparent animate-pulse"></div>
             </div>
 
             <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500`} />
@@ -54,12 +54,12 @@ const CareerAgentCard = ({ careerModule }) => {
             </div>
 
             <div className="relative p-4 md:p-8 flex flex-col md:flex-row items-center gap-6 z-10">
-                <div className="flex-shrink-0 px-1 pt-1 pb-0 rounded-2xl border border-white/10 transition-transform duration-300">
+                <div className="shrink-0 px-1 pt-1 pb-0 rounded-2xl border border-white/10 transition-transform duration-300">
                     {careerModule.icon}
                 </div>
 
-                <div className="flex-grow text-center md:text-left">
-                    <h3 className="text-2xl md:text-3xl font-bold text-white group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-rose-300 transition-all">
+                <div className="grow text-center md:text-left">
+                    <h3 className="text-2xl md:text-3xl font-bold text-white group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-linear-to-r group-hover:from-white group-hover:to-rose-300 transition-all">
                         {careerModule.title}
                     </h3>
                     <p key={currentCareerMsg} className="text-white/60 text-lg animate-slideUpFade">
@@ -68,7 +68,7 @@ const CareerAgentCard = ({ careerModule }) => {
                 </div>
 
                 {/* Glassy Shiny Button */}
-                <button className="relative overflow-hidden flex-shrink-0 cursor-pointer px-8 py-4 rounded-xl border border-white/10 bg-black/70 backdrop-blur-sm  text-white font-bold flex items-center justify-center gap-2 group/btn transition-all active:scale-[0.98]">
+                <button className="relative overflow-hidden shrink-0 cursor-pointer px-8 py-4 rounded-xl border border-white/10 bg-black/70 backdrop-blur-sm  text-white font-bold flex items-center justify-center gap-2 group/btn transition-all active:scale-[0.98]">
                     <span className="relative z-10 flex items-center gap-2">
                         Launch Agent
                         <Bot className="w-5 h-5 group-hover/btn:rotate-12 transition-transform" />

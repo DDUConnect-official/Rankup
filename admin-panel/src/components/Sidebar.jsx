@@ -9,7 +9,7 @@ const Sidebar = () => {
     const location = useLocation();
 
     return (
-        <div className="w-64 bg-zinc-950 border-r border-zinc-900 flex flex-col h-screen shrink-0 hidden md:flex">
+        <div className="w-64 bg-zinc-950 border-r border-zinc-900 flex-col h-screen shrink-0 hidden md:flex">
             {/* Brand */}
             <div className="p-5 flex items-center justify-center">
                 <img src={RankUpLogo} alt="RankUp" className="h-20" />

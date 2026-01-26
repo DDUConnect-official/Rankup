@@ -188,7 +188,7 @@ const ProfileDetails = () => {
     return (
         <div className="w-full max-w-7xl mx-auto animate-slideUpFade">
             {/* Main Glass Container - Aligned with Dashboard layout */}
-            <div className="w-full p-4 md:p-6 rounded-xl md:rounded-[1rem] border border-white/10 backdrop-blur-2xl shadow-xl relative overflow-hidden">
+            <div className="w-full p-4 md:p-6 rounded-xl md:rounded-2xl border border-white/10 backdrop-blur-2xl shadow-xl relative overflow-hidden">
 
                 {/* Header Bar */}
                 <div className="flex items-center justify-between gap-3 mb-5 relative z-10">
@@ -235,7 +235,7 @@ const ProfileDetails = () => {
 
                     {/* Identity Module (Left) - Avatar on Top Design */}
                     <div className="lg:col-span-5 xl:col-span-4 flex flex-col h-full">
-                        <div className="relative w-full rounded-[1rem] overflow-hidden backdrop-blur-3xl border border-white/10 shadow-2xl group flex flex-col transition-all duration-500">
+                        <div className="relative w-full rounded-2xl overflow-hidden backdrop-blur-3xl border border-white/10 shadow-2xl group flex flex-col transition-all duration-500">
                             {/* Sparkle Effect (Themed for Profile) */}
                             <div className="absolute bottom-0 left-0 w-full h-200 overflow-hidden pointer-events-none z-30">
                                 {[...Array(15)].map((_, i) => (
@@ -337,7 +337,7 @@ const ProfileDetails = () => {
 
                     {/* Information Module (Right) */}
                     <div className="lg:col-span-7 xl:col-span-8 flex flex-col h-full gap-8">
-                        <div className="backdrop-blur-2xl border border-white/10 rounded-[1rem] p-6 md:p-8 grow flex flex-col shadow-2xl relative overflow-hidden">
+                        <div className="backdrop-blur-2xl border border-white/10 rounded-2xl p-6 md:p-8 grow flex flex-col shadow-2xl relative overflow-hidden">
 
                             {/* Sparkle Effect (Themed for Profile) */}
                             <div className="absolute bottom-0 left-0 w-full h-200 overflow-hidden pointer-events-none z-30">
@@ -357,7 +357,7 @@ const ProfileDetails = () => {
                                 ))}
                             </div>
                             <h2 className="text-2xl font-bold text-white mb-7 flex items-center gap-4 relative z-10 transition-transform duration-300 group-hover/info:translate-x-1">
-                                <span className="w-1.5 h-8 bg-gradient-to-b from-cyan-500 to-blue-600 rounded-full shadow-[0_0_15px_rgba(6,182,212,0.5)]"></span>
+                                <span className="w-1.5 h-8 bg-linear-to-b from-cyan-500 to-blue-600 rounded-full shadow-[0_0_15px_rgba(6,182,212,0.5)]"></span>
                                 Profile Information
                             </h2>
 
@@ -374,13 +374,13 @@ const ProfileDetails = () => {
                                                 value={formData.username}
                                                 onChange={(e) => setFormData({ ...formData, username: e.target.value.replace(/\s+/g, "") })}
                                                 maxLength={20}
-                                                className="w-full bg-white/[0.03] border-b-2 border-white/10 p-2 text-white font-mono text-lg placeholder:text-white/10 focus:border-cyan-400 focus:bg-cyan-400/5 outline-none transition-all duration-300"
+                                                className="w-full bg-white/3 border-b-2 border-white/10 p-2 text-white font-mono text-lg placeholder:text-white/10 focus:border-cyan-400 focus:bg-cyan-400/5 outline-none transition-all duration-300"
                                                 placeholder="ENTER USERNAME"
                                             />
                                             <div className="absolute bottom-0 left-0 w-0 h-[2px] bg-cyan-400 transition-all duration-500 group-hover/input:w-full" />
                                         </div>
                                     ) : (
-                                        <div className="p-2 bg-white/[0.02] border-l-4 border-cyan-500/50 text-white font-mono text-lg shadow-sm">
+                                        <div className="p-2 bg-white/2 border-l-4 border-cyan-500/50 text-white font-mono text-lg shadow-sm">
                                             {formData.username}
                                         </div>
                                     )}
@@ -404,11 +404,11 @@ const ProfileDetails = () => {
                                                 value={formData.branch}
                                                 onChange={(e) => setFormData({ ...formData, branch: e.target.value })}
                                                 maxLength={30}
-                                                className="w-full bg-white/[0.03] border-b-2 border-white/10 p-2 text-white font-mono text-lg placeholder:text-white/10 focus:border-fuchsia-400 focus:bg-fuchsia-400/5 outline-none transition-all duration-300"
+                                                className="w-full bg-white/3 border-b-2 border-white/10 p-2 text-white font-mono text-lg placeholder:text-white/10 focus:border-fuchsia-400 focus:bg-fuchsia-400/5 outline-none transition-all duration-300"
                                                 placeholder="ENTER_DATA"
                                             />
                                         ) : (
-                                            <div className="p-2 bg-white/[0.02] border-l-4 border-fuchsia-500/50 text-white font-mono text-lg">
+                                            <div className="p-2 bg-white/2 border-l-4 border-fuchsia-500/50 text-white font-mono text-lg">
                                                 {formData.branch}
                                             </div>
                                         )}
@@ -424,11 +424,11 @@ const ProfileDetails = () => {
                                                 value={formData.university}
                                                 onChange={(e) => setFormData({ ...formData, university: e.target.value })}
                                                 maxLength={50}
-                                                className="w-full bg-white/[0.03] border-b-2 border-white/10 p-2 text-white font-mono text-lg placeholder:text-white/10 focus:border-fuchsia-400 focus:bg-fuchsia-400/5 outline-none transition-all duration-300"
+                                                className="w-full bg-white/3 border-b-2 border-white/10 p-2 text-white font-mono text-lg placeholder:text-white/10 focus:border-fuchsia-400 focus:bg-fuchsia-400/5 outline-none transition-all duration-300"
                                                 placeholder="ENTER_DATA"
                                             />
                                         ) : (
-                                            <div className="p-2 bg-white/[0.02] border-l-4 border-fuchsia-500/50 text-white font-mono text-lg">
+                                            <div className="p-2 bg-white/2 border-l-4 border-fuchsia-500/50 text-white font-mono text-lg">
                                                 {formData.university}
                                             </div>
                                         )}
@@ -456,7 +456,7 @@ const ProfileDetails = () => {
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className=" bg-white/[0.02] p-2 relative overflow-hidden group/biobox">
+                                    <div className=" bg-white/2 p-2 relative overflow-hidden group/biobox">
                                         <div className="absolute top-0 left-0 w-1 h-full bg-green-500 transition-all duration-500" />
                                         <p className="text-white font-mono text-lg leading-relaxed ml-1">
                                             {formData.aboutMe}
@@ -490,7 +490,7 @@ const ProfileDetails = () => {
 
             {/* Logout Modal */}
             {showLogoutModal && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
                     <div className="w-full max-w-md bg-[#121212] border border-white/10 rounded-2xl p-8 shadow-2xl animate-in fade-in zoom-in duration-200">
                         <h2 className="text-2xl font-bold mb-2 text-white">Confirm Logout</h2>
                         <p className="text-white/60 mb-8 font-medium">Are you sure you want to terminate your current session?</p>
@@ -508,7 +508,7 @@ const ProfileDetails = () => {
 
             {/* Profile Save Confirm Modal */}
             {showSaveConfirm && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
                     <div className="w-full max-w-md bg-[#121212] border border-white/10 rounded-2xl p-8 shadow-2xl animate-in fade-in zoom-in duration-200">
                         <h2 className="text-2xl font-bold mb-2 text-white">Save Changes?</h2>
                         <p className="text-white/60 mb-8 font-medium">Your profile configuration will be updated across all systems. Continue?</p>
@@ -526,7 +526,7 @@ const ProfileDetails = () => {
 
             {/* Delete Account Modal */}
             {showDeleteModal && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
                     <div className="w-full max-w-md bg-[#121212] border border-white/10 rounded-2xl p-8 shadow-2xl animate-in fade-in zoom-in duration-200 text-left">
                         <h2 className="text-2xl font-bold mb-2 text-white">Delete Account?</h2>
                         <p className="text-white/60 mb-6 font-medium">This action is permanent and cannot be undone. Please verify your identity.</p>

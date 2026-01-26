@@ -78,14 +78,14 @@ const WelcomeGuide = ({ onComplete }) => {
 
     return (
         <div
-            className={`fixed inset-0 z-[9999] flex items-center justify-center transition-opacity duration-300 ${isVisible ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+            className={`fixed inset-0 z-9999 flex items-center justify-center transition-opacity duration-300 ${isVisible ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
                 }`}
         >
             {/* Blurred Background */}
             <div className="absolute inset-0 backdrop-blur-xl"></div>
 
             {/* Full Screen Sparkles Effect */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none z-[9998]">
+            <div className="absolute inset-0 overflow-hidden pointer-events-none z-9998">
                 {[...Array(50)].map((_, i) => (
                     <div
                         key={i}
@@ -104,7 +104,7 @@ const WelcomeGuide = ({ onComplete }) => {
 
             {/* Speech Bubble - Centered with Simple Glassmorphism */}
             <div
-                className={`relative z-[10000] max-w-2xl w-[90%] md:w-[600px] transition-all duration-500 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+                className={`relative z-10000 max-w-2xl w-[90%] md:w-[600px] transition-all duration-500 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
                     }`}
             >
                 {/* Simple Glassmorphism Card */}
@@ -177,7 +177,7 @@ const WelcomeGuide = ({ onComplete }) => {
 
             {/* Avatar - Bottom Right Corner (Absolutely Stuck to Bottom) */}
             <div
-                className={`fixed bottom-0 right-0 md:right-25 z-[10002] w-56 h-72 md:w-96 md:h-[28rem] lg:w-[25rem] lg:h-[25rem] pointer-events-none transition-all duration-700 ${isVisible
+                className={`fixed bottom-0 right-0 md:right-25 z-10002 w-56 h-72 md:w-96 md:h-112 lg:w-100 lg:h-100 pointer-events-none transition-all duration-700 ${isVisible
                     ? "opacity-100 translate-x-0 translate-y-0"
                     : "opacity-0 translate-x-20 translate-y-20"
                     }`}
