@@ -4,6 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import RankUpLogo from '../assets/RankUp_Logo.png';
 import { Plus, Save, Trash2, Book, Gamepad, HelpCircle, CheckCircle, Circle, X, Menu, Pencil, Bot } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
+import Toast from '../components/Toast';
+import { Loader2 } from 'lucide-react';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -39,7 +41,11 @@ const Dashboard = () => {
   });
 
   const [formTab, setFormTab] = useState('theory');
+
   const [generatingQuiz, setGeneratingQuiz] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [loadingLevels, setLoadingLevels] = useState(false);
+  const [toast, setToast] = useState(null); // { message, type }
 
   const loadContent = async () => {
     setLoading(true);
@@ -60,11 +66,13 @@ const Dashboard = () => {
 
   const loadLevels = async () => {
     if (!selectedModule) return;
+    setLoadingLevels(true);
     try {
       const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/admin/levels/${selectedModule._id}`, { headers: { email: user.email } });
       setLevels(res.data);
       setStats(s => ({ ...s, levels: res.data.length }));
     } catch (err) { console.error(err); }
+    finally { setLoadingLevels(false); }
   };
 
   const loadUsers = async () => {
@@ -80,6 +88,7 @@ const Dashboard = () => {
 
   const saveLevel = async () => {
     try {
+      setSaving(true);
       let levelId;
       if (activeLevel === 'new') {
         const res = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/admin/level`, { ...levelForm, moduleId: selectedModule._id }, { headers: { email: user.email } });
@@ -101,7 +110,13 @@ const Dashboard = () => {
       if (levelForm.hasGame) await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/admin/game`, { ...gameForm, levelId }, { headers: { email: user.email } });
 
       setActiveLevel(null); resetFields(); loadLevels();
-    } catch (err) { alert('Error: ' + err.message); }
+      setToast({ message: 'Level saved successfully!', type: 'success' });
+    } catch (err) {
+      alert('Error: ' + err.message);
+      setToast({ message: 'Failed to save level', type: 'error' });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const deleteLevel = (id) => {
@@ -222,7 +237,7 @@ const Dashboard = () => {
             setQuizForm({ ...quizForm, questions: res.data.questions });
             setFormTab('quiz');
             setLevelForm(prev => ({ ...prev, hasQuiz: true }));
-            // Optional: Success toast here
+            setToast({ message: 'Quiz generated successfully!', type: 'success' });
           }
         } catch (err) {
           console.error('Quiz generation error:', err);
@@ -338,7 +353,9 @@ const Dashboard = () => {
                       {selectedModule?.name} Levels
                     </div>
                     <div className='block md:hidden'>
-                      {levels.map(l => (
+                      {loadingLevels ? (
+                        <div className="p-10 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-zinc-600" /></div>
+                      ) : levels.map(l => (
                         <div key={l._id} className='p-3 border-b border-zinc-900/40'>
                           <div className='flex justify-between items-start mb-2'>
                             <div className='flex-1'>
@@ -361,7 +378,9 @@ const Dashboard = () => {
                         <tr><th className='px-6 py-3'>Status</th><th className='px-6 py-3'>Level Title</th><th className='px-6 py-3'>XP</th><th className='px-6 py-3 text-right'>Actions</th></tr>
                       </thead>
                       <tbody className='text-sm'>
-                        {levels.map(l => (
+                        {loadingLevels ? (
+                          <tr><td colSpan="4" className="p-10 text-center"><div className="flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-zinc-600" /></div></td></tr>
+                        ) : levels.map(l => (
                           <tr key={l._id} className='border-b border-zinc-900/40 hover:bg-zinc-900/20 transition-colors'>
                             <td className='px-6 py-4'>
                               <button onClick={() => togglePublish(l._id, l.isPublished)} className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase cursor-pointer ${l.isPublished ? 'bg-emerald-500/20 text-emerald-500' : 'bg-zinc-800 text-zinc-600'}`}>
@@ -378,7 +397,7 @@ const Dashboard = () => {
                         ))}
                       </tbody>
                     </table>
-                    {levels.length === 0 && <div className='p-6 md:p-10 text-center text-[10px] md:text-xs text-zinc-600 font-bold'>No levels found</div>}
+                    {!loadingLevels && levels.length === 0 && <div className='p-6 md:p-10 text-center text-[10px] md:text-xs text-zinc-600 font-bold'>No levels found</div>}
                   </div>
                 ) : (
                   <div className='bg-zinc-900/80 border border-zinc-900 rounded-lg shadow-2xl'>
@@ -596,8 +615,8 @@ const Dashboard = () => {
                       )}
 
                       <div className='pt-4 md:pt-8 border-t border-zinc-900 flex gap-3 md:gap-4'>
-                        <button onClick={saveLevel} className='bg-white text-black px-6 md:px-8 py-2 md:py-2.5 rounded text-[10px] md:text-xs font-bold hover:bg-zinc-300 transition-all flex items-center gap-1.5 md:gap-2 cursor-pointer'>
-                          <Save size={12} className='md:w-3.5 md:h-3.5' /> Save
+                        <button onClick={saveLevel} disabled={saving} className='bg-white text-black px-6 md:px-8 py-2 md:py-2.5 rounded text-[10px] md:text-xs font-bold hover:bg-zinc-300 transition-all flex items-center gap-1.5 md:gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'>
+                          {saving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} className='md:w-3.5 md:h-3.5' />} {saving ? 'Saving...' : 'Save'}
                         </button>
                       </div>
                     </div>
@@ -615,6 +634,7 @@ const Dashboard = () => {
           message={confirmModal.message}
           isDanger={confirmModal.isDanger}
         />
+        {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       </div>
     </div>
   );
