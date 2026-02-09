@@ -59,7 +59,7 @@ const CareerAgentCard = ({ careerModule }) => {
                 </div>
 
                 <div className="grow text-center md:text-left">
-                    <h3 className="text-2xl md:text-3xl font-bold text-white group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-linear-to-r group-hover:from-white group-hover:to-rose-300 transition-all">
+                    <h3 className="text-2xl md:text-3xl font-bold text-white transition-all">
                         {careerModule.title}
                     </h3>
                     <p key={currentCareerMsg} className="text-white/60 text-lg animate-slideUpFade">

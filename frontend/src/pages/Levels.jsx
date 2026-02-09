@@ -51,7 +51,7 @@ const Levels = () => {
     const totalXp = levels.reduce((acc, curr) => acc + (curr.xpReward || 0), 0);
 
     return (
-        <div className="w-full min-h-screen p-2 md:p-8 md:pt-3 animate-slideUpFade flex flex-col items-center">
+        <div className="w-full min-h-screen md:p-8 md:pt-3 animate-slideUpFade flex flex-col items-center">
 
             {/* Main Glass Container */}
             <div className="w-full max-w-8xl p-4 md:p-10 rounded-xl border border-white/10 backdrop-blur-2xl shadow-xl bg-black/20">
@@ -60,7 +60,7 @@ const Levels = () => {
                 <div className="w-full flex flex-col items-center gap-6 mb-6 md:mb-12 md:flex-row md:items-end md:justify-between animate-in fade-in slide-in-from-bottom-4 duration-700">
 
                     {/* Title Area */}
-                    <div className="flex flex-col md:flex-row md:items-start gap-2 md:gap-6">
+                    <div className="flex flex-row md:items-start gap-2 md:gap-6">
                         <button
                             onClick={() => navigate("/dashboard")}
                             className="p-2 md:p-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors backdrop-blur-md cursor-pointer group mt-2 w-fit"

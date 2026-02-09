@@ -7,12 +7,17 @@ import authRoutes from "./routes/auth.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
 import studentRoutes from "./routes/student.routes.js";
 import aiRoutes from "./routes/ai.routes.js";
+import dsaRoutes from "./routes/dsa.routes.js";
 import Module from "./models/Module.js";
 
 dotenv.config();
 
 const seedModules = async () => {
     const modules = ["JavaScript", "Python", "HTML/CSS"];
+
+    // Remove any modules not in the allowed list
+    await Module.deleteMany({ name: { $nin: modules } });
+
     for (const name of modules) {
         await Module.findOneAndUpdate(
             { name },
@@ -20,7 +25,7 @@ const seedModules = async () => {
             { upsert: true, new: true }
         );
     }
-    console.log("Modules seeded/verified ✅");
+    console.log("Modules seeded/verified (extraneous removed) ✅");
 };
 
 connectDB().then(() => {
@@ -46,6 +51,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/student", studentRoutes);
 app.use("/api/ai", aiRoutes);
+app.use("/api/dsa", dsaRoutes);
 
 app.get("/", (req, res) => {
     res.send("RankUp Backend Running 🚀");

@@ -5,11 +5,11 @@ import { useNavigate } from "react-router-dom";
 const LearningModuleCard = ({ module }) => {
     const navigate = useNavigate();
 
-    // Sparkle Color Palettes
+    // Sparkle Color Palettes for Language Modules
     const sparkleColors = {
-        maths: ["bg-amber-400", "bg-yellow-200", "bg-red-400", "bg-orange-300"],
-        science: ["bg-emerald-400", "bg-cyan-200", "bg-teal-400", "bg-green-300"],
-        coding: ["bg-orange-400", "bg-amber-200", "bg-yellow-400", "bg-orange-300"],
+        javascript: ["bg-yellow-400", "bg-amber-300", "bg-orange-400", "bg-yellow-300"],
+        python: ["bg-blue-400", "bg-cyan-300", "bg-indigo-400", "bg-blue-300"],
+        "html/css": ["bg-orange-400", "bg-red-400", "bg-amber-300", "bg-orange-300"],
     };
 
     return (
@@ -30,7 +30,7 @@ const LearningModuleCard = ({ module }) => {
                     </div>
                 </div>
 
-                <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-linear-to-r group-hover:from-white group-hover:to-gray-400 transition-all">
+                <h3 className="text-2xl font-bold text-white mb-2 ">
                     {module.title}
                 </h3>
                 <p className="text-white/60 mb-6 grow">

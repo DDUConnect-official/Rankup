@@ -115,7 +115,7 @@ const DashboardLayout = () => {
                 avatar={profileData?.avatar}
             />
 
-            <div className="relative z-10 pt-24 min-h-screen p-2.5 md:p-6 md:pt-28">
+            <div className="relative z-10 pt-24 min-h-screen md:p-6 md:pt-28">
                 <Outlet context={{ profileData }} />
             </div>
         </div>

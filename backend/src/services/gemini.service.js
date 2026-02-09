@@ -16,7 +16,7 @@ export const generateQuiz = async (contentArray, questionCount = 5, difficulty =
         if (!apiKey) throw new Error("Gemini API Key configuration missing");
 
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
         // Combine content into single text, handling both strings and objects
         const contentText = contentArray.map(item => {
