@@ -180,7 +180,7 @@ export const submitCode = async (req, res) => {
 
                 // Update user's total XP
                 await User.findByIdAndUpdate(userId, {
-                    $inc: { xp: xpAwarded }
+                    $inc: { totalScore: xpAwarded }
                 });
             }
 

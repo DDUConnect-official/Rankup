@@ -10,6 +10,7 @@ import DsaChallengeWidget from "../components/dashboard/DsaChallengeWidget";
 import LearningModuleCard from "../components/dashboard/LearningModuleCard";
 import CareerAgentCard from "../components/dashboard/CareerAgentCard";
 import WelcomeGuide from "../components/WelcomeGuide";
+import StartDsaModal from "../components/dsa/StartDsaModal";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -18,6 +19,8 @@ const Dashboard = () => {
   const [showWelcomeGuide, setShowWelcomeGuide] = useState(false);
   const [dynamicModules, setDynamicModules] = useState([]);
   const [dsaProgress, setDsaProgress] = useState(null);
+  const [showStartDsaModal, setShowStartDsaModal] = useState(false);
+  const [startingDsa, setStartingDsa] = useState(false);
 
   const iconMap = {
     javascript: <Code2 className="w-8 h-8 text-yellow-400" />,
@@ -102,6 +105,19 @@ const Dashboard = () => {
     // Optionally refresh profile data to get updated hasSeenWelcomeGuide status
   };
 
+  const handleStartDsa = async () => {
+    try {
+      setStartingDsa(true);
+      await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/dsa/start/${profileData._id}`);
+      setShowStartDsaModal(false);
+      navigate("/dsa-challenge");
+    } catch (err) {
+      console.error("Failed to start DSA challenge", err);
+    } finally {
+      setStartingDsa(false);
+    }
+  };
+
   return (
     <>
       {/* Welcome Guide Overlay */}
@@ -132,7 +148,13 @@ const Dashboard = () => {
               {/* DSA Challenge Widget */}
               <DsaChallengeWidget
                 progress={dsaProgress}
-                onClick={() => navigate("/dsa-challenge")}
+                onClick={() => {
+                  if (dsaProgress?.hasStarted) {
+                    navigate("/dsa-challenge");
+                  } else {
+                    setShowStartDsaModal(true);
+                  }
+                }}
               />
             </div>
 
@@ -218,6 +240,14 @@ const Dashboard = () => {
 
         </div>
       </div>
+
+      {/* Start DSA Modal */}
+      <StartDsaModal
+        isOpen={showStartDsaModal}
+        onClose={() => setShowStartDsaModal(false)}
+        onStart={handleStartDsa}
+        loading={startingDsa}
+      />
     </>
   );
 };

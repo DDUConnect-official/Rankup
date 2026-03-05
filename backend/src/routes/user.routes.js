@@ -94,4 +94,18 @@ router.delete("/delete-account/:uid", async (req, res) => {
     }
 });
 
+// GET: Global Leaderboard (Top 50)
+router.get("/leaderboard", async (req, res) => {
+    try {
+        const topUsers = await User.find({ role: { $ne: "admin" } })
+            .sort({ totalScore: -1, createdAt: 1 })
+            .limit(50)
+            .select("username avatar totalScore branch university");
+
+        res.status(200).json(topUsers);
+    } catch (error) {
+        res.status(500).json({ message: "Error fetching leaderboard" });
+    }
+});
+
 export default router;

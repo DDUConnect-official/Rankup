@@ -1,23 +1,22 @@
-
 import dotenv from "dotenv";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import keyManager from "../utils/keyManager.js";
 
 dotenv.config();
 
 export const chatWithAI = async (req, res) => {
     try {
         console.log("AI Chat Request received:", req.body);
-        const { message, previousMessages, context } = req.body;
+        const { message, chatHistory, context } = req.body;
 
         if (!message) {
             return res.status(400).json({ message: "Message is required" });
         }
 
-        // Construct history (simple version)
-        let history = "";
-        if (previousMessages && Array.isArray(previousMessages)) {
-             history = previousMessages.map(msg => 
-                `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`
-             ).join("\n");
+        // Get rotated Gemini API key
+        const apiKey = keyManager.getNextKey('GEMINI');
+        if (!apiKey) {
+            throw new Error("No Gemini API keys configured");
         }
 
         const systemPrompt = `
@@ -35,39 +34,29 @@ export const chatWithAI = async (req, res) => {
         ${context || "No specific lesson content provided."}
         `;
 
-        const fullPrompt = `${systemPrompt}\n\nConversation History:\n${history}\n\nUser: ${message}\nAssistant:`;
-
-        const apiKey = process.env.GEMINI_API_KEY;
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`;
-
-        console.log("Sending request to Gemini via fetch...");
-        
-        const response = await fetch(url, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{ text: fullPrompt }]
-                }]
-            })
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({
+            model: "gemini-2.5-flash",
+            systemInstruction: systemPrompt,
+            generationConfig: {
+                maxOutputTokens: 250,
+                temperature: 0.7,
+            }
         });
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error("Gemini API Error:", response.status, errorText);
-            throw new Error(`Gemini API returned ${response.status}: ${errorText}`);
-        }
+        // Prepare chat history for Gemini SDK
+        const history = (chatHistory || []).map(msg => ({
+            role: msg.role === 'user' ? 'user' : 'model',
+            parts: [{ text: msg.content }]
+        }));
 
-        const data = await response.json();
-        console.log("Gemini API Data:", JSON.stringify(data).substring(0, 100) + "...");
+        const chat = model.startChat({
+            history: history
+        });
 
-        const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        
-        if (!responseText) {
-             throw new Error("No text found in Gemini response");
-        }
+        console.log("Sending message to Gemini SDK...");
+        const result = await chat.sendMessage(message);
+        const responseText = result.response.text();
 
         console.log("AI Response generated:", responseText);
         res.json({ response: responseText });

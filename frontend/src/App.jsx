@@ -8,6 +8,7 @@ import ProfileDetails from "./pages/ProfileDetails";
 import Levels from "./pages/Levels";
 import LevelContent from "./pages/LevelContent";
 import DsaChallenge from "./pages/DsaChallenge";
+import Leaderboard from "./pages/Leaderboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { useAuth } from "./context/AuthContext";
 
@@ -63,6 +64,7 @@ function App() {
           <Route path="/levels/:moduleId" element={<Levels />} />
           <Route path="/level/:levelId" element={<LevelContent />} />
           <Route path="/dsa-challenge" element={<DsaChallenge />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
         </Route>
 
         {/* Fallback */}

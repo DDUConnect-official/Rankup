@@ -69,21 +69,38 @@ router.post("/quiz/submit", async (req, res) => {
 
         if (!user) return res.status(404).json({ message: "User not found" });
 
+        // Fetch Quiz to get passing score
+        const quiz = await Quiz.findOne({ levelId });
+        const passingScore = quiz ? quiz.passingScore : 70;
+
         // Check if level already completed
         const alreadyCompleted = user.completedLevels.find(l => l.levelId.toString() === levelId);
 
-        if (!alreadyCompleted) {
-            const level = await Level.findById(levelId);
+        let awardedXP = 0;
+        let isMastered = false;
 
-            user.totalScore += level.xpReward || 0;
-            user.completedLevels.push({
-                levelId: levelId,
-                quizScore: score
-            });
-            await user.save();
+        if (score >= passingScore) {
+            isMastered = true;
+            if (!alreadyCompleted) {
+                const level = await Level.findById(levelId);
+                awardedXP = level.xpReward || 0;
+                user.totalScore += awardedXP;
+                user.completedLevels.push({
+                    levelId: levelId,
+                    quizScore: score
+                });
+                await user.save();
+            }
         }
 
-        res.json({ message: "Progress saved", totalScore: user.totalScore, alreadyCompleted: !!alreadyCompleted });
+        res.json({
+            message: isMastered ? (alreadyCompleted ? "Practice session completed!" : "Level Mastered!") : "Keep practicing!",
+            totalScore: user.totalScore,
+            alreadyCompleted: !!alreadyCompleted,
+            isMastered,
+            awardedXP,
+            passingScore
+        });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
@@ -135,6 +152,37 @@ router.post("/synthesize", async (req, res) => {
     } catch (err) {
         console.error("Murf AI Error Full:", err.response?.data || err.message);
         res.status(500).json({ message: "Failed to generate speech" });
+    }
+});
+
+// GET: My Rank
+router.get("/my-rank/:userId", async (req, res) => {
+    try {
+        const { userId } = req.params;
+        let user;
+
+        // Find user by multiple possible ID types
+        user = await User.findOne({ uid: userId }) ||
+            await User.findOne({ email: userId }) ||
+            (userId.match(/^[0-9a-fA-F]{24}$/) ? await User.findById(userId) : null);
+
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        // Count how many users have more score than current user
+        const higherScoringCount = await User.countDocuments({
+            role: { $ne: "admin" },
+            $or: [
+                { totalScore: { $gt: user.totalScore } },
+                { totalScore: user.totalScore, createdAt: { $lt: user.createdAt } }
+            ]
+        });
+
+        res.json({
+            rank: higherScoringCount + 1,
+            totalScore: user.totalScore
+        });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
     }
 });
 

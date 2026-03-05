@@ -5,6 +5,8 @@ import Level from "../models/Level.js";
 import Game from "../models/Game.js";
 import Quiz from "../models/Quiz.js";
 import User from "../models/User.js";
+import DsaChallenge from "../models/DsaChallenge.js";
+import DsaSubmission from "../models/DsaSubmission.js";
 import { generateQuiz } from "../services/gemini.service.js";
 
 const router = express.Router();
@@ -27,12 +29,16 @@ router.get("/stats", async (req, res) => {
     try {
         const modulesCount = await Module.countDocuments();
         const levelsCount = await Level.countDocuments();
-        const usersCount = await User.countDocuments();
+        const usersCount = await User.countDocuments({ role: { $ne: "admin" } });
+        const dsaChallengesCount = await DsaChallenge.countDocuments();
+        const dsaSubmissionsCount = await DsaSubmission.countDocuments();
 
         res.json({
             modules: modulesCount,
             levels: levelsCount,
             students: usersCount,
+            dsa: dsaChallengesCount,
+            submissions: dsaSubmissionsCount,
             status: 'Online'
         });
     } catch (err) {
@@ -210,6 +216,39 @@ router.post("/quiz/generate", async (req, res) => {
             message: "Failed to generate quiz",
             error: err.message
         });
+    }
+});
+
+// --- DSA Challenge Routes ---
+router.get("/dsa/challenges", async (req, res) => {
+    try {
+        const challenges = await DsaChallenge.find().sort({ dayNumber: 1 });
+        res.json(challenges);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+router.post("/dsa/challenge", async (req, res) => {
+    try {
+        const { dayNumber } = req.body;
+        const challenge = await DsaChallenge.findOneAndUpdate(
+            { dayNumber },
+            req.body,
+            { new: true, upsert: true, setDefaultsOnInsert: true }
+        );
+        res.json(challenge);
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
+});
+
+router.delete("/dsa/challenge/:id", async (req, res) => {
+    try {
+        await DsaChallenge.findByIdAndDelete(req.params.id);
+        res.json({ message: "DSA Challenge deleted" });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
     }
 });
 

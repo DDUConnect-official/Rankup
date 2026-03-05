@@ -1,15 +1,17 @@
 ﻿import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import RankUpLogo from '../assets/RankUp_Logo.png';
-import { Plus, Save, Trash2, Book, Gamepad, HelpCircle, CheckCircle, Circle, X, Menu, Pencil, Bot } from 'lucide-react';
+import { Plus, Save, Trash2, Book, Gamepad, HelpCircle, CheckCircle, Circle, X, Menu, Pencil, Bot, Terminal } from 'lucide-react';
 import ConfirmModal from '../components/ConfirmModal';
 import Toast from '../components/Toast';
 import { Loader2 } from 'lucide-react';
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const [stats, setStats] = useState({ modules: 0, levels: 0, students: 0, status: 'Online' });
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [stats, setStats] = useState({ modules: 0, levels: 0, students: 0, status: 'Active', dsa: 0 });
   const [modules, setModules] = useState([]);
   const [selectedModule, setSelectedModule] = useState(null);
   const [levels, setLevels] = useState([]);
@@ -21,6 +23,10 @@ const Dashboard = () => {
   const [confirmModal, setConfirmModal] = useState({
     isOpen: false, title: '', message: '', onConfirm: null, isDanger: false
   });
+  const [dsaChallenges, setDsaChallenges] = useState([]);
+  const [activeDsaChallenge, setActiveDsaChallenge] = useState(null); // 'new' or challengeId
+  const [loadingDsa, setLoadingDsa] = useState(false);
+  const [savingDsa, setSavingDsa] = useState(false);
 
   const [levelForm, setLevelForm] = useState({
     title: '', levelNumber: 1, description: '', xpReward: 50, hasGame: false, hasQuiz: false, isPublished: false,
@@ -40,7 +46,15 @@ const Dashboard = () => {
     name: '', type: 'logic', difficulty: 'easy', instructions: '', xpReward: 50
   });
 
+  const [dsaForm, setDsaForm] = useState({
+    dayNumber: 1, title: '', description: '', difficulty: 'Easy',
+    constraints: [''], examples: [{ input: '', output: '', explanation: '' }],
+    hints: [''], tags: [''], testCases: [{ input: '', expectedOutput: '', isHidden: false }],
+    maxXP: 100
+  });
+
   const [formTab, setFormTab] = useState('theory');
+  const [dsaTab, setDsaTab] = useState('details');
 
   const [generatingQuiz, setGeneratingQuiz] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -55,6 +69,18 @@ const Dashboard = () => {
       if (resp.data.length > 0) setSelectedModule(resp.data[0]);
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
+  };
+
+  useEffect(() => {
+    const v = searchParams.get('view');
+    if (v === 'dsa') setViewMode('dsa');
+    else if (v === 'users') setViewMode('users');
+    else setViewMode('modules');
+  }, [searchParams]);
+
+  const setView = (mode) => {
+    setViewMode(mode);
+    setSearchParams({ view: mode });
   };
 
   const loadStats = async () => {
@@ -82,8 +108,18 @@ const Dashboard = () => {
     } catch (err) { console.error(err); }
   };
 
+  const loadDsaChallenges = async () => {
+    setLoadingDsa(true);
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/admin/dsa/challenges`, { headers: { email: user.email } });
+      setDsaChallenges(res.data);
+    } catch (err) { console.error(err); }
+    finally { setLoadingDsa(false); }
+  };
+
   useEffect(() => { loadContent(); loadStats(); }, []);
   useEffect(() => { if (viewMode === 'users') loadUsers(); }, [viewMode]);
+  useEffect(() => { if (viewMode === 'dsa') loadDsaChallenges(); }, [viewMode]);
   useEffect(() => { loadLevels(); }, [selectedModule]);
 
   const saveLevel = async () => {
@@ -184,10 +220,65 @@ const Dashboard = () => {
     } catch (err) { alert('Error: ' + err.message); }
   };
 
+  const saveDsaChallenge = async () => {
+    try {
+      setSavingDsa(true);
+      await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/admin/dsa/challenge`, dsaForm, { headers: { email: user.email } });
+      setActiveDsaChallenge(null);
+      setDsaForm({
+        dayNumber: 1, title: '', description: '', difficulty: 'Easy',
+        constraints: [''], examples: [{ input: '', output: '', explanation: '' }],
+        hints: [''], tags: [''], testCases: [{ input: '', expectedOutput: '', isHidden: false }],
+        maxXP: 100
+      });
+      loadDsaChallenges();
+      setToast({ message: 'DSA Challenge saved successfully!', type: 'success' });
+    } catch (err) {
+      console.error(err);
+      setToast({ message: 'Failed to save DSA challenge', type: 'error' });
+    } finally {
+      setSavingDsa(false);
+    }
+  };
+
+  const deleteDsaChallenge = (id) => {
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete DSA Challenge?',
+      message: 'This will permanently remove this challenge.',
+      isDanger: true,
+      onConfirm: async () => {
+        try {
+          await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/admin/dsa/challenge/${id}`, { headers: { email: user.email } });
+          loadDsaChallenges();
+          setToast({ message: 'Challenge deleted', type: 'success' });
+        } catch (err) { console.error(err); }
+      }
+    });
+  };
+
+  const editDsaChallenge = (challenge) => {
+    setActiveDsaChallenge(challenge._id);
+    setDsaForm({
+      ...challenge,
+      constraints: challenge.constraints || [''],
+      examples: challenge.examples || [{ input: '', output: '', explanation: '' }],
+      hints: challenge.hints || [''],
+      tags: challenge.tags || [''],
+      testCases: challenge.testCases || [{ input: '', expectedOutput: '', isHidden: false }]
+    });
+  };
+
   const resetFields = () => {
     setLevelForm({ title: '', description: '', xpReward: 50, hasGame: false, hasQuiz: false, isPublished: false, content: [{ type: 'paragraph', title: '', data: '' }] });
     setQuizForm({ questions: [{ question: '', options: ['', '', '', ''], correctAnswer: '' }], passingScore: 70 });
     setGameForm({ name: '', type: 'logic', difficulty: 'easy', instructions: '', xpReward: 50 });
+    setDsaForm({
+      dayNumber: 1, title: '', description: '', difficulty: 'Easy',
+      constraints: [''], examples: [{ input: '', output: '', explanation: '' }],
+      hints: [''], tags: [''], testCases: [{ input: '', expectedOutput: '', isHidden: false }],
+      maxXP: 100
+    });
     setFormTab('theory');
   };
 
@@ -269,26 +360,33 @@ const Dashboard = () => {
           <div className='flex flex-col md:flex-row justify-between md:items-end gap-3'>
             <div>
               <h2 className='text-lg md:text-2xl font-bold text-white tracking-tight'>
-                {viewMode === 'users' ? 'User Management' : 'Level Management'}
+                {viewMode === 'users' ? 'User Management' : viewMode === 'dsa' ? 'DSA Challenge Management' : 'Level Management'}
               </h2>
               <p className='text-[10px] md:text-xs text-zinc-500 mt-0.5 md:mt-1'>
-                {viewMode === 'users' ? 'View registered students' : 'Add or edit learning levels'}
+                {viewMode === 'users' ? 'View registered students' : viewMode === 'dsa' ? 'Manage 100 days of DSA' : 'Add or edit learning levels'}
               </p>
             </div>
-            {viewMode === 'modules' && activeLevel === null && (
-              <button onClick={() => setActiveLevel('new')} className='bg-white text-black text-[10px] md:text-xs font-bold px-4 md:px-5 py-2 rounded shadow-lg hover:bg-zinc-200 transition-all flex items-center justify-center gap-2 cursor-pointer'>
-                <Plus size={12} className='md:w-3.5 md:h-3.5' /> Add Level
-              </button>
-            )}
-            {viewMode === 'users' && (
-              <button onClick={() => setViewMode('modules')} className='bg-zinc-800 text-zinc-400 text-[10px] md:text-xs font-bold px-4 md:px-5 py-2 rounded shadow-lg hover:bg-zinc-700 transition-all flex items-center justify-center gap-2 cursor-pointer'>
-                Back to Modules
-              </button>
-            )}
+            <div className='flex items-center gap-2'>
+              {viewMode === 'modules' && activeLevel === null && (
+                <button onClick={() => setActiveLevel('new')} className='bg-white text-black text-[10px] md:text-xs font-bold px-4 md:px-5 py-2 rounded shadow-lg hover:bg-zinc-200 transition-all flex items-center justify-center gap-2 cursor-pointer'>
+                  <Plus size={12} className='md:w-3.5 md:h-3.5' /> Add Level
+                </button>
+              )}
+              {viewMode === 'dsa' && activeDsaChallenge === null && (
+                <button onClick={() => setActiveDsaChallenge('new')} className='bg-white text-black text-[10px] md:text-xs font-bold px-4 md:px-5 py-2 rounded shadow-lg hover:bg-zinc-200 transition-all flex items-center justify-center gap-2 cursor-pointer'>
+                  <Plus size={12} className='md:w-3.5 md:h-3.5' /> Add Challenge
+                </button>
+              )}
+              {(viewMode === 'users' || viewMode === 'dsa') && (
+                <button onClick={() => setView('modules')} className='bg-zinc-800 text-zinc-400 text-[10px] md:text-xs font-bold px-4 md:px-5 py-2 rounded shadow-lg hover:bg-zinc-700 transition-all flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap'>
+                  Back to Modules
+                </button>
+              )}
+            </div>
           </div>
 
           <div className='grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4'>
-            {[{ label: 'Modules', value: stats.modules, action: () => setViewMode('modules') }, { label: 'Levels', value: stats.levels, action: () => setViewMode('modules') }, { label: 'Users', value: stats.students, action: () => setViewMode('users') }, { label: 'Status', value: stats.status }].map((s, i) => (
+            {[{ label: 'Modules', value: stats.modules, action: () => setView('modules') }, { label: 'Levels', value: stats.levels, action: () => setView('modules') }, { label: 'Users', value: stats.students, action: () => setView('users') }, { label: 'DSA', value: stats.dsa || 0, action: () => setView('dsa') }].map((s, i) => (
               <div key={i} onClick={s.action} className={`bg-zinc-900/50 border border-zinc-900 p-2 md:p-4 rounded-lg ${s.action ? 'cursor-pointer hover:bg-zinc-900' : ''}`}>
                 <p className='text-[8px] md:text-[9px] font-bold text-zinc-600 uppercase tracking-widest mb-0.5 md:mb-1'>{s.label}</p>
                 <p className='text-sm md:text-xl font-bold text-white'>{s.value}</p>
@@ -301,33 +399,256 @@ const Dashboard = () => {
               <div className='px-3 md:px-6 py-2 md:py-4 bg-zinc-900/80 border-b border-zinc-900 text-[9px] md:text-[10px] font-bold text-zinc-500 uppercase tracking-widest'>
                 Registered Students
               </div>
-              <table className='w-full text-left'>
-                <thead className='text-[9px] font-bold text-zinc-700 uppercase border-b border-zinc-900'>
-                  <tr>
-                    <th className='px-6 py-3'>Avatar</th>
-                    <th className='px-6 py-3'>Username</th>
-                    <th className='px-6 py-3'>Email</th>
-                    <th className='px-6 py-3'>XP / Score</th>
-                    <th className='px-6 py-3'>Solved Problems</th>
-                  </tr>
-                </thead>
-                <tbody className='text-sm'>
-                  {users.map(u => (
-                    <tr key={u._id} className='border-b border-zinc-900/40 hover:bg-zinc-900/20 transition-colors'>
-                      <td className='px-6 py-4'>
-                        <img src={u.avatar} alt="av" className="w-8 h-8 rounded-full border border-zinc-700" />
-                      </td>
-                      <td className='px-6 py-4 font-bold text-zinc-300'>{u.username || 'Unset'}</td>
-                      <td className='px-6 py-4 text-zinc-500'>{u.email}</td>
-                      <td className='px-6 py-4 text-emerald-400 font-mono'>{u.totalScore} XP</td>
-                      <td className='px-6 py-4 text-zinc-400'>{u.solvedProblemsCount}</td>
+              <div className='overflow-x-auto'>
+                <table className='w-full text-left min-w-[600px]'>
+                  <thead className='text-[9px] font-bold text-zinc-700 uppercase border-b border-zinc-900'>
+                    <tr>
+                      <th className='px-6 py-3'>Avatar</th>
+                      <th className='px-6 py-3'>Username</th>
+                      <th className='px-6 py-3'>Email</th>
+                      <th className='px-6 py-3'>XP / Score</th>
+                      <th className='px-6 py-3'>Solved Problems</th>
                     </tr>
-                  ))}
-                  {users.length === 0 && (
-                    <tr><td colSpan="5" className="p-10 text-center text-zinc-600">No users found.</td></tr>
-                  )}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className='text-sm'>
+                    {users.map(u => (
+                      <tr key={u._id} className='border-b border-zinc-900/40 hover:bg-zinc-900/20 transition-colors'>
+                        <td className='px-6 py-4'>
+                          <img src={u.avatar} alt="av" className="w-8 h-8 rounded-full border border-zinc-700" />
+                        </td>
+                        <td className='px-6 py-4 font-bold text-zinc-300'>{u.username || 'Unset'}</td>
+                        <td className='px-6 py-4 text-zinc-500'>{u.email}</td>
+                        <td className='px-6 py-4 text-emerald-400 font-mono'>{u.totalScore} XP</td>
+                        <td className='px-6 py-4 text-zinc-400'>{u.solvedProblemsCount}</td>
+                      </tr>
+                    ))}
+                    {users.length === 0 && (
+                      <tr><td colSpan="5" className="p-10 text-center text-zinc-600">No users found.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : viewMode === 'dsa' ? (
+            <div className='grid grid-cols-1 gap-3 md:gap-6 pb-10 md:pb-20'>
+              {activeDsaChallenge === null ? (
+                <div className='bg-zinc-900/50 border border-zinc-900 rounded-lg overflow-hidden'>
+                  <div className='px-3 md:px-6 py-2 md:py-4 bg-zinc-900/80 border-b border-zinc-900 text-[9px] md:text-[10px] font-bold text-zinc-500 uppercase tracking-widest'>
+                    100 Days of DSA Challenges
+                  </div>
+                  <div className='overflow-x-auto'>
+                    <table className='w-full text-left min-w-[600px]'>
+                      <thead className='text-[9px] font-bold text-zinc-700 uppercase border-b border-zinc-900'>
+                        <tr>
+                          <th className='px-6 py-3'>Day</th>
+                          <th className='px-6 py-3'>Title</th>
+                          <th className='px-6 py-3'>Difficulty</th>
+                          <th className='px-6 py-3'>XP</th>
+                          <th className='px-6 py-3 text-right'>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className='text-sm'>
+                        {loadingDsa ? (
+                          <tr><td colSpan="5" className="p-10 text-center"><div className="flex justify-center"><Loader2 className="w-8 h-8 animate-spin text-zinc-600" /></div></td></tr>
+                        ) : dsaChallenges.map(c => (
+                          <tr key={c._id} className='border-b border-zinc-900/40 hover:bg-zinc-900/20 transition-colors'>
+                            <td className='px-6 py-4 font-mono text-zinc-500'>Day {c.dayNumber}</td>
+                            <td className='px-6 py-4 font-bold text-zinc-300'>{c.title}</td>
+                            <td className='px-6 py-4'>
+                              <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${c.difficulty === 'Easy' ? 'bg-emerald-500/10 text-emerald-500' : c.difficulty === 'Medium' ? 'bg-amber-500/10 text-amber-500' : 'bg-red-500/10 text-red-500'}`}>
+                                {c.difficulty}
+                              </span>
+                            </td>
+                            <td className='px-6 py-4 text-zinc-500'>{c.maxXP} XP</td>
+                            <td className='px-6 py-4 text-right flex justify-end gap-3'>
+                              <button onClick={() => editDsaChallenge(c)} className='text-zinc-500 hover:text-white transition-colors cursor-pointer'><Pencil size={16} /></button>
+                              <button onClick={() => deleteDsaChallenge(c._id)} className='text-zinc-700 hover:text-red-500 transition-colors cursor-pointer'><Trash2 size={16} /></button>
+                            </td>
+                          </tr>
+                        ))}
+                        {!loadingDsa && dsaChallenges.length === 0 && (
+                          <tr><td colSpan="5" className="p-10 text-center text-zinc-600">No challenges found.</td></tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ) : (
+                <div className='bg-zinc-900/80 border border-zinc-900 rounded-lg shadow-2xl'>
+                  <div className='border-b border-zinc-900 flex bg-zinc-950/50 overflow-x-auto rounded-t-lg'>
+                    {['details', 'constraints', 'examples', 'testcases', 'hints'].map(t => (
+                      <button key={t} onClick={() => setDsaTab(t)} className={`px-3 md:px-6 py-2 md:py-3 text-[9px] md:text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap cursor-pointer ${dsaTab === t ? 'text-white border-b-2 border-white' : 'text-zinc-700 hover:text-zinc-400'}`}>
+                        {t}
+                      </button>
+                    ))}
+                    <button onClick={() => { setActiveDsaChallenge(null); resetFields(); }} className='ml-auto px-3 md:px-6 py-2 md:py-3 text-[9px] md:text-[10px] font-bold text-zinc-700 hover:text-white uppercase transition-all flex items-center gap-1 md:gap-2 cursor-pointer'>
+                      <X size={12} className='md:w-3.5 md:h-3.5' /> Cancel
+                    </button>
+                  </div>
+
+                  <div className='p-3 md:p-8 space-y-4 md:space-y-6'>
+                    {dsaTab === 'details' && (
+                      <div className='space-y-4 md:space-y-6 w-full'>
+                        <div className='flex flex-col md:flex-row gap-3 md:gap-4'>
+                          <div className='w-20 md:w-24 shrink-0'>
+                            <label className='text-[8px] md:text-[9px] font-bold text-zinc-700 uppercase block mb-1 md:mb-1.5'>Day #</label>
+                            <input type='number' value={dsaForm.dayNumber} onChange={e => setDsaForm({ ...dsaForm, dayNumber: parseInt(e.target.value) })} className='w-full bg-zinc-950 border border-zinc-900 p-2 md:p-3 rounded text-xs md:text-sm outline-none focus:border-zinc-700 font-mono text-center' />
+                          </div>
+                          <div className='flex-1'>
+                            <label className='text-[8px] md:text-[9px] font-bold text-zinc-700 uppercase block mb-1 md:mb-1.5'>Challenge Title</label>
+                            <input type='text' value={dsaForm.title} onChange={e => setDsaForm({ ...dsaForm, title: e.target.value })} className='w-full bg-zinc-950 border border-zinc-900 p-2 md:p-3 rounded text-xs md:text-sm outline-none focus:border-zinc-700' placeholder='e.g., Two Sum' />
+                          </div>
+                          <div className='w-32 shrink-0'>
+                            <label className='text-[8px] md:text-[9px] font-bold text-zinc-700 uppercase block mb-1 md:mb-1.5'>Difficulty</label>
+                            <select value={dsaForm.difficulty} onChange={e => setDsaForm({ ...dsaForm, difficulty: e.target.value })} className='w-full bg-zinc-950 border border-zinc-900 p-2 md:p-3 rounded text-xs md:text-sm outline-none focus:border-zinc-700'>
+                              <option value="Easy">Easy</option>
+                              <option value="Medium">Medium</option>
+                              <option value="Hard">Hard</option>
+                            </select>
+                          </div>
+                          <div className='w-20 md:w-24 shrink-0'>
+                            <label className='text-[8px] md:text-[9px] font-bold text-zinc-700 uppercase block mb-1 md:mb-1.5'>Max XP</label>
+                            <input type='number' value={dsaForm.maxXP} onChange={e => setDsaForm({ ...dsaForm, maxXP: parseInt(e.target.value) })} className='w-full bg-zinc-950 border border-zinc-900 p-2 md:p-3 rounded text-xs md:text-sm outline-none focus:border-zinc-700' />
+                          </div>
+                        </div>
+                        <div>
+                          <label className='text-[8px] md:text-[9px] font-bold text-zinc-700 uppercase block mb-1 md:mb-1.5'>Description</label>
+                          <textarea value={dsaForm.description} onChange={e => setDsaForm({ ...dsaForm, description: e.target.value })} className='w-full bg-zinc-950 border border-zinc-900 p-2 md:p-3 rounded text-xs md:text-sm h-40 md:h-48 outline-none resize-none focus:border-zinc-700 font-mono' placeholder='Challenge description (supports markdown)...' />
+                        </div>
+                        <div>
+                          <label className='text-[8px] md:text-[9px] font-bold text-zinc-700 uppercase block mb-1 md:mb-1.5'>Tags (comma separated)</label>
+                          <input type='text' value={dsaForm.tags.join(', ')} onChange={e => setDsaForm({ ...dsaForm, tags: e.target.value.split(',').map(t => t.trim()) })} className='w-full bg-zinc-950 border border-zinc-900 p-2 md:p-3 rounded text-xs md:text-sm outline-none focus:border-zinc-700' placeholder='Array, HashTable, TwoPointers' />
+                        </div>
+                      </div>
+                    )}
+
+                    {dsaTab === 'constraints' && (
+                      <div className='space-y-4'>
+                        <div className='flex justify-between items-center'>
+                          <label className='text-[8px] md:text-[9px] font-bold text-zinc-700 uppercase tracking-widest'>Constraints</label>
+                          <button onClick={() => setDsaForm({ ...dsaForm, constraints: [...dsaForm.constraints, ''] })} className='text-[8px] md:text-[9px] font-bold bg-zinc-800 hover:bg-zinc-700 px-3 py-1.5 rounded cursor-pointer'>+ Add</button>
+                        </div>
+                        {dsaForm.constraints.map((c, i) => (
+                          <div key={i} className='flex gap-2'>
+                            <input type='text' value={c} onChange={e => {
+                              const n = [...dsaForm.constraints];
+                              n[i] = e.target.value;
+                              setDsaForm({ ...dsaForm, constraints: n });
+                            }} className='flex-1 bg-zinc-950 border border-zinc-900 p-2 rounded text-xs outline-none' placeholder='e.g., 1 <= n <= 10^5' />
+                            <button onClick={() => setDsaForm({ ...dsaForm, constraints: dsaForm.constraints.filter((_, idx) => idx !== i) })} className='text-zinc-700 hover:text-red-500'><Trash2 size={14} /></button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {dsaTab === 'examples' && (
+                      <div className='space-y-4'>
+                        <div className='flex justify-between items-center'>
+                          <label className='text-[8px] md:text-[9px] font-bold text-zinc-700 uppercase tracking-widest'>Examples</label>
+                          <button onClick={() => setDsaForm({ ...dsaForm, examples: [...dsaForm.examples, { input: '', output: '', explanation: '' }] })} className='text-[8px] md:text-[9px] font-bold bg-zinc-800 hover:bg-zinc-700 px-3 py-1.5 rounded cursor-pointer'>+ Add</button>
+                        </div>
+                        {dsaForm.examples.map((ex, i) => (
+                          <div key={i} className='bg-zinc-900/30 border border-zinc-900 p-4 rounded-lg space-y-3'>
+                            <div className='flex justify-between items-center'>
+                              <span className='text-[8px] font-bold text-zinc-500 uppercase'>Example {i + 1}</span>
+                              <button onClick={() => setDsaForm({ ...dsaForm, examples: dsaForm.examples.filter((_, idx) => idx !== i) })} className='text-zinc-700 hover:text-red-500'><Trash2 size={14} /></button>
+                            </div>
+                            <div className='grid grid-cols-2 gap-4'>
+                              <div>
+                                <label className='text-[8px] text-zinc-700 uppercase block mb-1'>Input</label>
+                                <input type='text' value={ex.input} onChange={e => {
+                                  const n = [...dsaForm.examples];
+                                  n[i].input = e.target.value;
+                                  setDsaForm({ ...dsaForm, examples: n });
+                                }} className='w-full bg-zinc-950 border border-zinc-900 p-2 rounded text-xs font-mono' />
+                              </div>
+                              <div>
+                                <label className='text-[8px] text-zinc-700 uppercase block mb-1'>Output</label>
+                                <input type='text' value={ex.output} onChange={e => {
+                                  const n = [...dsaForm.examples];
+                                  n[i].output = e.target.value;
+                                  setDsaForm({ ...dsaForm, examples: n });
+                                }} className='w-full bg-zinc-950 border border-zinc-900 p-2 rounded text-xs font-mono' />
+                              </div>
+                            </div>
+                            <div>
+                              <label className='text-[8px] text-zinc-700 uppercase block mb-1'>Explanation</label>
+                              <textarea value={ex.explanation} onChange={e => {
+                                const n = [...dsaForm.examples];
+                                n[i].explanation = e.target.value;
+                                setDsaForm({ ...dsaForm, examples: n });
+                              }} className='w-full bg-zinc-950 border border-zinc-900 p-2 rounded text-xs h-16' />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {dsaTab === 'testcases' && (
+                      <div className='space-y-4'>
+                        <div className='flex justify-between items-center'>
+                          <label className='text-[8px] md:text-[9px] font-bold text-zinc-700 uppercase tracking-widest'>Test Cases</label>
+                          <button onClick={() => setDsaForm({ ...dsaForm, testCases: [...dsaForm.testCases, { input: '', expectedOutput: '', isHidden: false }] })} className='text-[8px] md:text-[9px] font-bold bg-zinc-800 hover:bg-zinc-700 px-3 py-1.5 rounded cursor-pointer'>+ Add</button>
+                        </div>
+                        {dsaForm.testCases.map((tc, i) => (
+                          <div key={i} className='bg-zinc-900/30 border border-zinc-900 p-4 rounded-lg flex items-center gap-4'>
+                            <div className='flex-1'>
+                              <label className='text-[8px] text-zinc-700 uppercase block mb-1'>Input</label>
+                              <input type='text' value={tc.input} onChange={e => {
+                                const n = [...dsaForm.testCases];
+                                n[i].input = e.target.value;
+                                setDsaForm({ ...dsaForm, testCases: n });
+                              }} className='w-full bg-zinc-950 border border-zinc-900 p-2 rounded text-xs font-mono' />
+                            </div>
+                            <div className='flex-1'>
+                              <label className='text-[8px] text-zinc-700 uppercase block mb-1'>Expected Output</label>
+                              <input type='text' value={tc.expectedOutput} onChange={e => {
+                                const n = [...dsaForm.testCases];
+                                n[i].expectedOutput = e.target.value;
+                                setDsaForm({ ...dsaForm, testCases: n });
+                              }} className='w-full bg-zinc-950 border border-zinc-900 p-2 rounded text-xs font-mono' />
+                            </div>
+                            <div className='flex items-center gap-2 pt-4'>
+                              <input type='checkbox' checked={tc.isHidden} onChange={e => {
+                                const n = [...dsaForm.testCases];
+                                n[i].isHidden = e.target.checked;
+                                setDsaForm({ ...dsaForm, testCases: n });
+                              }} className='w-3 h-3' />
+                              <span className='text-[8px] uppercase text-zinc-500 font-bold'>Hidden</span>
+                            </div>
+                            <button onClick={() => setDsaForm({ ...dsaForm, testCases: dsaForm.testCases.filter((_, idx) => idx !== i) })} className='text-zinc-700 hover:text-red-500 mt-4'><Trash2 size={16} /></button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {dsaTab === 'hints' && (
+                      <div className='space-y-4'>
+                        <div className='flex justify-between items-center'>
+                          <label className='text-[8px] md:text-[9px] font-bold text-zinc-700 uppercase tracking-widest'>Hints</label>
+                          <button onClick={() => setDsaForm({ ...dsaForm, hints: [...dsaForm.hints, ''] })} className='text-[8px] md:text-[9px] font-bold bg-zinc-800 hover:bg-zinc-700 px-3 py-1.5 rounded cursor-pointer'>+ Add</button>
+                        </div>
+                        {dsaForm.hints.map((h, i) => (
+                          <div key={i} className='flex gap-2'>
+                            <input type='text' value={h} onChange={e => {
+                              const n = [...dsaForm.hints];
+                              n[i] = e.target.value;
+                              setDsaForm({ ...dsaForm, hints: n });
+                            }} className='flex-1 bg-zinc-950 border border-zinc-900 p-2 rounded text-xs outline-none' placeholder='e.g., Use a Hash Map for O(n) time' />
+                            <button onClick={() => setDsaForm({ ...dsaForm, hints: dsaForm.hints.filter((_, idx) => idx !== i) })} className='text-zinc-700 hover:text-red-500'><Trash2 size={14} /></button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className='pt-4 md:pt-8 border-t border-zinc-900 flex gap-3 md:gap-4'>
+                      <button onClick={saveDsaChallenge} disabled={savingDsa} className='bg-white text-black px-6 md:px-8 py-2 md:py-2.5 rounded text-[10px] md:text-xs font-bold hover:bg-zinc-300 transition-all flex items-center gap-1.5 md:gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'>
+                        {savingDsa ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} className='md:w-3.5 md:h-3.5' />} {savingDsa ? 'Saving...' : 'Save Challenge'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className='grid grid-cols-1 lg:grid-cols-12 gap-3 md:gap-6 pb-10 md:pb-20'>
@@ -635,8 +956,8 @@ const Dashboard = () => {
           isDanger={confirmModal.isDanger}
         />
         {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
-      </div>
-    </div>
+      </div >
+    </div >
   );
 };
 export default Dashboard;

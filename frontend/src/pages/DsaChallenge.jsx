@@ -38,6 +38,13 @@ const DsaChallenge = () => {
         }
     }, [profileData]);
 
+    useEffect(() => {
+        if (challengeData && !challengeData.hasStarted) {
+            const timer = setTimeout(() => navigate("/dashboard"), 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [challengeData, navigate]);
+
     const fetchChallenge = async () => {
         try {
             setLoading(true);
@@ -51,15 +58,6 @@ const DsaChallenge = () => {
             console.error("Failed to fetch challenge:", error);
         } finally {
             setLoading(false);
-        }
-    };
-
-    const handleStartChallenge = async () => {
-        try {
-            await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/dsa/start/${profileData._id}`);
-            fetchChallenge();
-        } catch (error) {
-            console.error("Failed to start challenge:", error);
         }
     };
 
@@ -188,21 +186,10 @@ const DsaChallenge = () => {
             <div className="w-full max-w-8xl p-4 md:p-6 rounded-xl border border-white/10 backdrop-blur-2xl shadow-xl bg-black/20">
 
                 {!challengeData?.hasStarted ? (
-                    // Start Challenge View
-                    <div className="min-h-[400px] flex flex-col items-center justify-center p-12 text-center">
-                        <div className="w-20 h-20 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-6">
-                            <Code2 className="w-10 h-10 text-blue-400" />
-                        </div>
-                        <h2 className="text-3xl font-bold text-white mb-4">100 Days of DSA</h2>
-                        <p className="text-white/40 max-w-lg mb-8 text-sm">
-                            Master problem solving with one challenge every day. Build consistency and earn XP.
-                        </p>
-                        <button
-                            onClick={handleStartChallenge}
-                            className="px-10 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-all active:scale-95"
-                        >
-                            Start Today's Challenge
-                        </button>
+                    <div className="flex-1 flex flex-col items-center justify-center min-h-[600px] text-white/20">
+                        <Loader2 className="w-16 h-16 mb-4 animate-spin opacity-10" />
+                        <p className="text-xl font-bold tracking-tight">Accessing Challenge...</p>
+                        <p className="text-sm">Please start the challenge from the dashboard.</p>
                     </div>
                 ) : (
                     <>

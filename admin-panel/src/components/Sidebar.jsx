@@ -1,12 +1,17 @@
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import RankUpLogo from "../assets/RankUp_Logo.png";
-import { LayoutDashboard, LogOut } from "lucide-react";
+import { LayoutDashboard, LogOut, Code } from "lucide-react";
 
 const Sidebar = () => {
     const { logout } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
+
+    const query = new URLSearchParams(location.search);
+    const view = query.get("view");
+    const isDsa = view === "dsa";
+    const isDashboard = !view || view === "modules" || view === "users";
 
     return (
         <div className="w-64 bg-zinc-950 border-r border-zinc-900 flex-col h-screen shrink-0 hidden md:flex">
@@ -19,12 +24,20 @@ const Sidebar = () => {
             <nav className="flex-1 px-4 space-y-2">
                 <p className="px-4 text-[9px] font-bold uppercase tracking-[0.2em] text-zinc-800 mb-4">Workspace</p>
                 <Link
-                    to="/"
+                    to="/?view=modules"
                     className={`flex items-center gap-3 px-4 py-3 rounded text-xs font-bold uppercase tracking-widest transition-all
-            ${location.pathname === "/" ? "bg-zinc-900 text-white" : "text-zinc-600 hover:text-white"}`}
+            ${isDashboard ? "bg-zinc-900 text-white" : "text-zinc-600 hover:text-white"}`}
                 >
                     <LayoutDashboard size={16} />
                     Dashboard
+                </Link>
+                <Link
+                    to="/?view=dsa"
+                    className={`flex items-center gap-3 px-4 py-3 rounded text-xs font-bold uppercase tracking-widest transition-all
+            ${isDsa ? "bg-zinc-900 text-white" : "text-zinc-600 hover:text-white"}`}
+                >
+                    <Code size={16} />
+                    DSA Challenges
                 </Link>
             </nav>
 

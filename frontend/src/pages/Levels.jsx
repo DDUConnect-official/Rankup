@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, BookOpen, Star, Lock, Play } from "lucide-react";
+import { useParams, useNavigate, useOutletContext } from "react-router-dom";
+import { ArrowLeft, BookOpen, Star, Lock, Play, CheckCircle } from "lucide-react";
 import axios from "axios";
 import Loader from "../components/Loader";
 import ModuleProgressWidget from "../components/dashboard/ModuleProgressWidget";
@@ -8,6 +8,7 @@ import ModuleProgressWidget from "../components/dashboard/ModuleProgressWidget";
 const Levels = () => {
     const { moduleId } = useParams();
     const navigate = useNavigate();
+    const { profileData } = useOutletContext();
     const [levels, setLevels] = useState([]);
     const [loading, setLoading] = useState(true);
     const [moduleInfo, setModuleInfo] = useState(null);
@@ -79,7 +80,7 @@ const Levels = () => {
                     {/* Stats Widget */}
                     <ModuleProgressWidget
                         totalLevels={levels.length}
-                        levelsCompleted={0} // TODO: Fetch real user progress
+                        levelsCompleted={profileData?.completedLevels?.filter(l => levels.some(lvl => lvl._id === l.levelId)).length || 0}
                         totalXp={totalXp}
                     />
                 </div>
@@ -87,35 +88,60 @@ const Levels = () => {
                 {/* Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {levels.length > 0 ? (
-                        levels.map((level, index) => (
-                            <div key={level._id} className="group relative bg-black/40 border border-white/10 rounded-2xl p-4 md:p-6 backdrop-blur-xl overflow-hidden">
-                                {/* Decorative BG */}
-                                <div className={`absolute inset-0 bg-linear-to-br`} />
+                        levels.map((level, index) => {
+                            // Level is locked if it's not the first one AND the previous one isn't completed
+                            const isCompleted = profileData?.completedLevels?.some(l => l.levelId === level._id);
+                            const isPredecessorCompleted = index === 0 || profileData?.completedLevels?.some(l => l.levelId === levels[index - 1]._id);
+                            const isLocked = !isPredecessorCompleted;
 
-                                <div className="relative z-10 flex flex-col h-full">
-                                    <div className="flex justify-between items-start mb-4">
-                                        <div className={`p-3 rounded-xl text-white/80 border border-white/10 bg-white/5 group-hover:scale-110 transition-transform duration-300`}>
-                                            <BookOpen size={24} />
+                            return (
+                                <div
+                                    key={level._id}
+                                    className={`group relative bg-black/40 border border-white/10 rounded-2xl p-4 md:p-6 backdrop-blur-xl overflow-hidden transition-all duration-500 ${isLocked ? 'grayscale opacity-60' : 'hover:border-white/20'}`}
+                                >
+                                    {/* Decorative BG */}
+                                    <div className={`absolute inset-0 bg-linear-to-br`} />
+
+                                    <div className="relative z-10 flex flex-col h-full">
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div className={`p-3 rounded-xl text-white/80 border border-white/10 bg-white/5 transition-transform duration-300 ${!isLocked && 'group-hover:scale-110'}`}>
+                                                {isLocked ? <Lock size={24} className="text-zinc-500" /> : <BookOpen size={24} />}
+                                            </div>
+                                            <div className="flex items-center gap-1.5 bg-yellow-500/10 px-3 py-1.5 rounded-full border border-yellow-500/20">
+                                                <Star size={14} className="text-yellow-400 fill-yellow-400" />
+                                                <span className="text-sm font-bold text-yellow-200">{level.xpReward} XP</span>
+                                            </div>
                                         </div>
-                                        <div className="flex items-center gap-1.5 bg-yellow-500/10 px-3 py-1.5 rounded-full border border-yellow-500/20">
-                                            <Star size={14} className="text-yellow-400 fill-yellow-400" />
-                                            <span className="text-sm font-bold text-yellow-200">{level.xpReward} XP</span>
+
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <h3 className="text-2xl font-bold text-white group-hover:text-blue-200 transition-colors line-clamp-1">{level.title}</h3>
+                                            {isCompleted && <CheckCircle size={18} className="text-emerald-500 shrink-0" />}
                                         </div>
+                                        <p className="text-white/60 text-sm mb-6 line-clamp-2 grow">{level.description}</p>
+
+                                        <button
+                                            onClick={() => !isLocked && navigate(`/level/${level._id}`)}
+                                            disabled={isLocked}
+                                            className={`w-full py-3 md:py-4 font-bold rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg ${isLocked
+                                                ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed border border-white/5'
+                                                : 'bg-white text-black hover:bg-white/90 active:scale-[0.98] shadow-white/10'}`}
+                                        >
+                                            {isLocked ? (
+                                                <>
+                                                    <Lock size={18} />
+                                                    LOCKED
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Play size={18} fill="currentColor" />
+                                                    {isCompleted ? 'PRACTICE AGAIN' : 'START LEVEL'}
+                                                </>
+                                            )}
+                                        </button>
                                     </div>
-
-                                    <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-blue-200 transition-colors line-clamp-1">{level.title}</h3>
-                                    <p className="text-white/60 text-sm mb-6 line-clamp-2 grow">{level.description}</p>
-
-                                    <button
-                                        onClick={() => navigate(`/level/${level._id}`)}
-                                        className="w-full py-3 md:py-4 bg-white text-black font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-white/90 transition-all active:scale-[0.98] cursor-pointer shadow-lg shadow-white/10"
-                                    >
-                                        <Play size={18} fill="currentColor" />
-                                        START LEVEL
-                                    </button>
                                 </div>
-                            </div>
-                        ))
+                            );
+                        })
                     ) : (
                         <div className="col-span-full flex flex-col items-center justify-center py-20 text-center border border-white/5 rounded-3xl bg-white/5 backdrop-blur-sm">
                             <div className="p-6 bg-white/5 rounded-full mb-4">
