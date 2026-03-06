@@ -166,53 +166,77 @@ const Leaderboard = () => {
                 </h2>
 
                 {/* List Section */}
-                <div className="w-full bg-white/5 border border-white/10 rounded-2xl overflow-hidden backdrop-blur-md mb-10">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse">
-                            <thead>
-                                <tr className="border-b border-white/10 bg-white/5">
-                                    <th className="px-8 py-6 text-xs font-black text-white/40 uppercase tracking-[0.2em]">Rank</th>
-                                    <th className="px-8 py-6 text-xs font-black text-white/40 uppercase tracking-[0.2em]">User</th>
-                                    <th className="px-8 py-6 text-xs font-black text-white/40 uppercase tracking-[0.2em]">College / Branch</th>
-                                    <th className="px-8 py-6 text-xs font-black text-white/40 uppercase tracking-[0.2em] text-right">Experience</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-white/5 text-sm md:text-base">
-                                {others.map((u, i) => {
-                                    const isMe = u.username === profileData?.username;
-                                    return (
-                                        <tr
-                                            key={u._id}
-                                            className={`group transition-colors ${isMe ? 'bg-blue-500/10' : 'hover:bg-white/5'}`}
-                                        >
-                                            <td className="px-8 py-5 font-mono text-white/50">{i + 4}</td>
-                                            <td className="px-8 py-5">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="w-11 h-11 rounded-full border border-white/10 overflow-hidden bg-white/5 shrink-0">
-                                                        <img src={u.avatar} alt="" className="w-full h-full object-cover" />
-                                                    </div>
-                                                    <div className="min-w-0">
-                                                        <p className={`font-bold truncate ${isMe ? 'text-blue-400' : 'text-white'}`}>
-                                                            {u.username} {isMe && <span className="ml-2 text-[9px] bg-blue-500 text-white px-2 py-0.5 rounded-full uppercase tracking-tighter">YOU</span>}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="px-8 py-5">
-                                                <p className="text-xs text-white/60 font-medium truncate max-w-[250px]">{u.university || "RankUp University"}</p>
-                                                <p className="text-[10px] text-white/30 uppercase font-black tracking-wider">{u.branch || "General"}</p>
-                                            </td>
-                                            <td className="px-8 py-5 text-right">
-                                                <div className="inline-flex items-center gap-1.5 bg-white/5 px-4 py-2 rounded-xl border border-white/10 group-hover:border-white/20 transition-all">
-                                                    <span className="font-black text-white font-mono">{u.totalScore}</span>
-                                                    <span className="text-[10px] font-black text-white/40">XP</span>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
+                <div className="w-full bg-white/5 border border-white/10 rounded-3xl overflow-hidden backdrop-blur-2xl mb-10 shadow-2xl">
+                    {/* Header */}
+                    <div className="hidden md:flex border-b border-white/10 bg-white/5 px-8 py-6">
+                        <div className="w-[10%] text-xs font-black text-white/40 uppercase tracking-[0.2em]">Rank</div>
+                        <div className="w-[30%] text-xs font-black text-white/40 uppercase tracking-[0.2em]">User</div>
+                        <div className="w-[25%] text-xs font-black text-white/40 uppercase tracking-[0.2em]">College</div>
+                        <div className="w-[20%] text-xs font-black text-white/40 uppercase tracking-[0.2em]">Branch</div>
+                        <div className="w-[15%] text-xs font-black text-white/40 uppercase tracking-[0.2em] text-right">XP</div>
+                    </div>
+
+                    {/* Rows */}
+                    <div className="divide-y divide-white/5">
+                        {others.map((u, i) => {
+                            const isMe = u.username === profileData?.username;
+                            return (
+                                <div
+                                    key={u._id}
+                                    className={`relative flex flex-col md:flex-row items-center md:items-stretch px-8 py-5 transition-colors ${isMe ? 'bg-blue-500/10' : ''}`}
+                                >
+                                    {/* Diagonal Sparkles for Row */}
+                                    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                                        {[...Array(5)].map((_, j) => (
+                                            <div
+                                                key={j}
+                                                className="animate-sparkle-diagonal bg-white/10"
+                                                style={{
+                                                    bottom: `${Math.random() * 100}%`,
+                                                    right: `${Math.random() * 20}%`,
+                                                    width: `${Math.random() * 2 + 1}px`,
+                                                    height: `${Math.random() * 2 + 1}px`,
+                                                    animationDuration: `${Math.random() * 3 + 4}s`,
+                                                    animationDelay: `${Math.random() * 2}s`,
+                                                }}
+                                            />
+                                        ))}
+                                    </div>
+
+                                    <div className="w-full md:w-[10%] flex items-center mb-2 md:mb-0">
+                                        <span className="font-mono text-white/50">{i + 4}</span>
+                                    </div>
+
+                                    <div className="w-full md:w-[30%] flex items-center mb-4 md:mb-0">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-11 h-11 rounded-full border border-white/10 overflow-hidden bg-white/5 shrink-0">
+                                                <img src={u.avatar} alt="" className="w-full h-full object-cover" />
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className={`font-bold truncate ${isMe ? 'text-blue-400' : 'text-white'}`}>
+                                                    {u.username} {isMe && <span className="ml-2 text-[9px] bg-blue-500 text-white px-2 py-0.5 rounded-full uppercase tracking-tighter">YOU</span>}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="w-full md:w-[25%] flex items-center mb-2 md:mb-0">
+                                        <p className="text-sm text-white/60 font-medium truncate">{u.university || "RankUp University"}</p>
+                                    </div>
+
+                                    <div className="w-full md:w-[20%] flex items-center mb-4 md:mb-0">
+                                        <p className="text-[10px] text-white/30 uppercase font-black tracking-wider">{u.branch || "General"}</p>
+                                    </div>
+
+                                    <div className="w-full md:w-[15%] flex items-center justify-end">
+                                        <div className="inline-flex items-center gap-1.5 bg-white/5 px-4 py-2 rounded-xl border border-white/10 transition-all">
+                                            <span className="font-black text-white font-mono">{u.totalScore}</span>
+                                            <span className="text-[10px] font-black text-white/40">XP</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
             </div>

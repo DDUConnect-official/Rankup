@@ -213,6 +213,31 @@ button {
   filter: blur(1px);
 }
 
+@keyframes sparkle-diagonal {
+  0% {
+    transform: translate(0, 0) scale(0.5);
+    opacity: 0;
+  }
+
+  20% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate(-100px, -200px) scale(0);
+    opacity: 0;
+  }
+}
+
+.animate-sparkle-diagonal {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  border-radius: 50%;
+  animation: sparkle-diagonal ease-out infinite;
+  filter: blur(1px);
+}
+
 @keyframes slideUpFade {
   0% {
     opacity: 0;

@@ -34,7 +34,14 @@ const LevelContent = () => {
     const [loadingIndex, setLoadingIndex] = useState(null);
     const [audioRef] = useState(new Audio());
     const [voiceEnabled, setVoiceEnabled] = useState(false);
-    const [isAiSidebarOpen, setIsAiSidebarOpen] = useState(true);
+    const [isAiSidebarOpen, setIsAiSidebarOpen] = useState(false);
+
+    // Initialize sidebar based on screen size
+    useEffect(() => {
+        if (window.innerWidth >= 1024) {
+            setIsAiSidebarOpen(true);
+        }
+    }, []);
 
     // Audio Cleanup
     useEffect(() => {
@@ -349,7 +356,7 @@ const LevelContent = () => {
                         {!showQuiz && (
                             <button
                                 onClick={() => setIsAiSidebarOpen(!isAiSidebarOpen)}
-                                className="p-2 rounded-lg border border-blue-500/50 text-blue-400 bg-blue-500/10 md:hidden"
+                                className="p-2 rounded-lg border border-blue-500/50 text-blue-400 bg-blue-500/10 lg:hidden"
                             >
                                 <MessageSquare size={18} />
                             </button>
@@ -432,7 +439,7 @@ const LevelContent = () => {
                                             <span className="px-3 py-1 rounded-lg bg-blue-500/10 border border-blue-500/20 text-[10px] font-black text-blue-400 italic">Target: {quiz.passingScore}%</span>
                                         </div>
 
-                                        <h3 className="text-3xl font-black text-white mb-10 leading-snug">
+                                        <h3 className="text-xl md:text-3xl font-black text-white mb-6 md:mb-10 leading-snug">
                                             {quiz.questions[currentQuestionIndex].question}
                                         </h3>
 
@@ -441,16 +448,16 @@ const LevelContent = () => {
                                                 <button
                                                     key={idx}
                                                     onClick={() => handleOptionSelect(idx)}
-                                                    className={`w-full text-left px-8 py-7 rounded-4xl border-2 transition-all duration-300 cursor-pointer group flex items-start gap-6 ${userAnswers[currentQuestionIndex] === idx
+                                                    className={`w-full text-left px-5 py-4 md:px-8 md:py-7 rounded-2xl md:rounded-4xl border-2 transition-all duration-300 cursor-pointer group flex items-start gap-4 md:gap-6 ${userAnswers[currentQuestionIndex] === idx
                                                         ? "bg-blue-600/10 border-blue-500 text-white shadow-[0_0_40px_rgba(37,99,235,0.1)]"
                                                         : "bg-white/5 border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-white"
                                                         }`}
                                                 >
-                                                    <div className={`w-7 h-7 rounded-xl border-2 flex items-center justify-center shrink-0 mt-0.5 transition-all ${userAnswers[currentQuestionIndex] === idx ? 'border-blue-500 bg-blue-500 scale-110' : 'border-zinc-700 group-hover:border-zinc-500 group-hover:bg-white/5'
+                                                    <div className={`w-6 h-6 md:w-7 md:h-7 rounded-lg md:rounded-xl border-2 flex items-center justify-center shrink-0 mt-0.5 transition-all ${userAnswers[currentQuestionIndex] === idx ? 'border-blue-500 bg-blue-500 scale-110' : 'border-zinc-700 group-hover:border-zinc-500 group-hover:bg-white/5'
                                                         }`}>
-                                                        {userAnswers[currentQuestionIndex] === idx && <div className="w-2.5 h-2.5 rounded-full bg-white animate-in zoom-in" />}
+                                                        {userAnswers[currentQuestionIndex] === idx && <div className="w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-white animate-in zoom-in" />}
                                                     </div>
-                                                    <span className="text-xl font-bold tracking-tight">{opt}</span>
+                                                    <span className="text-base md:text-xl font-bold tracking-tight">{opt}</span>
                                                 </button>
                                             ))}
                                         </div>
@@ -467,22 +474,22 @@ const LevelContent = () => {
                                     </div>
                                 ) : (
                                     <div className="text-center py-10 animate-slideUpFade">
-                                        <div className="relative inline-block mb-12">
+                                        <div className="relative inline-block mb-8 md:mb-12">
                                             <div className={`absolute inset-0 blur-3xl opacity-30 ${score >= (passingScore || 70) ? 'bg-emerald-500' : 'bg-red-500'}`} />
-                                            <div className={`relative w-40 h-40 rounded-[2.5rem] flex items-center justify-center text-6xl shadow-2xl border-4 ${score >= (passingScore || 70)
+                                            <div className={`relative w-28 h-28 md:w-40 md:h-40 rounded-2xl md:rounded-[2.5rem] flex items-center justify-center shadow-2xl border-4 ${score >= (passingScore || 70)
                                                 ? 'bg-[#0A0A0A] border-emerald-500 text-emerald-500'
                                                 : 'bg-[#0A0A0A] border-red-500 text-red-500'
                                                 }`}>
-                                                <Award size={80} strokeWidth={1} />
+                                                <Award size={40} className="md:w-20 md:h-20" strokeWidth={1} />
                                             </div>
                                         </div>
 
-                                        <h1 className="text-5xl md:text-7xl font-black text-white mb-6 tracking-tighter">
+                                        <h1 className="text-3xl md:text-7xl font-black text-white mb-4 md:mb-6 tracking-tighter">
                                             {isMastered
                                                 ? (isPractice ? "PRACTICE COMPLETED" : "LEVEL MASTERED")
                                                 : "NEEDS PRACTICE"}
                                         </h1>
-                                        <p className="text-2xl text-zinc-500 mb-14 font-medium uppercase tracking-[0.3em]">
+                                        <p className="text-base md:text-2xl text-zinc-500 mb-10 md:mb-14 font-medium uppercase tracking-[0.2em] md:tracking-[0.3em]">
                                             Performance: <span className={isMastered ? "text-emerald-400" : "text-rose-400"}>{score}%</span>
                                             {isMastered && awardedXP > 0 && <span className="ml-4 text-yellow-500">+{awardedXP} XP</span>}
                                             {isMastered && awardedXP === 0 && isPractice && <span className="ml-4 text-zinc-500">(Already Mastered)</span>}
@@ -522,7 +529,7 @@ const LevelContent = () => {
             </div>
 
             {/* AI Sidebar */}
-            <div className={`fixed inset-y-0 right-0 z-[100] md:relative md:z-10 transition-all duration-500 ease-in-out ${isAiSidebarOpen && !showQuiz ? 'w-full md:w-[380px] opacity-100' : 'w-0 opacity-0 pointer-events-none'}`}>
+            <div className={`fixed inset-y-0 right-0 z-[100] lg:relative lg:z-10 transition-all duration-500 ease-in-out ${isAiSidebarOpen && !showQuiz ? 'w-full lg:w-[380px] opacity-100' : 'w-0 opacity-0 pointer-events-none'}`}>
                 <AiSidebar
                     context={level?.content}
                     isOpen={isAiSidebarOpen && !showQuiz}
