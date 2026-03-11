@@ -149,7 +149,7 @@ const DsaChallengeModal = ({ isOpen, onClose, userId }) => {
                 ) : (
                     <div className="flex flex-col">
                         {/* Header */}
-                        <div className="flex items-center justify-between p-5 border-b border-white/10 shrink-0 bg-white/[0.02]">
+                        <div className="flex items-center justify-between p-5 border-b border-white/10 shrink-0 bg-white/2">
                             <div className="flex items-center gap-4">
                                 <h2 className="text-xl font-bold text-white tracking-tight">{challengeData.challenge.title}</h2>
                                 <span className={`px-2 py-0.5 text-[10px] font-bold rounded border uppercase ${getDifficultyColor(challengeData.challenge.difficulty)}`}>
@@ -181,7 +181,7 @@ const DsaChallengeModal = ({ isOpen, onClose, userId }) => {
                                     {challengeData.challenge.examples?.map((ex, idx) => (
                                         <div key={idx} className="space-y-2">
                                             <h3 className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Example {idx + 1}</h3>
-                                            <div className="p-3 bg-white/[0.02] border border-white/5 rounded-lg text-xs font-mono">
+                                            <div className="p-3 bg-white/2 border border-white/5 rounded-lg text-xs font-mono">
                                                 <div className="mb-1"><span className="text-white/30">Input:</span> <span className="text-blue-400">{ex.input}</span></div>
                                                 <div><span className="text-white/30">Output:</span> <span className="text-green-400">{ex.output}</span></div>
                                             </div>

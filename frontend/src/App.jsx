@@ -11,6 +11,7 @@ import DsaChallenge from "./pages/DsaChallenge";
 import Leaderboard from "./pages/Leaderboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { useAuth } from "./context/AuthContext";
+import CareerAgent from "./pages/CareerAgent";
 
 import AuthLayout from "./layouts/AuthLayout";
 import ProfileLayout from "./layouts/ProfileLayout";
@@ -65,6 +66,7 @@ function App() {
           <Route path="/level/:levelId" element={<LevelContent />} />
           <Route path="/dsa-challenge" element={<DsaChallenge />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
+          <Route path="/career-agent" element={<CareerAgent />} />
         </Route>
 
         {/* Fallback */}

@@ -81,8 +81,8 @@ const XPEarnedPopup = ({ isOpen, onClose, xpEarned, score, difficulty, streak, i
     const Icon = message.icon;
 
     return (
-        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="relative w-full max-w-md bg-gradient-to-br from-[#0d0d0d] to-[#1a1a1a] border border-white/20 rounded-2xl shadow-2xl animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
+        <div className="fixed inset-0 z-300 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="relative w-full max-w-md bg-linear-to-br from-[#0d0d0d] to-[#1a1a1a] border border-white/20 rounded-2xl shadow-2xl animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
                 {/* Close Button */}
                 <button
                     onClick={onClose}
@@ -95,7 +95,7 @@ const XPEarnedPopup = ({ isOpen, onClose, xpEarned, score, difficulty, streak, i
                 <div className="p-8 space-y-6 text-center">
                     {/* Icon */}
                     <div className="flex items-center justify-center">
-                        <div className={`w-20 h-20 rounded-full bg-gradient-to-br ${isFirstAttempt ? 'from-yellow-500/20 to-orange-500/20 border-yellow-500/30' : 'from-purple-500/20 to-blue-500/20 border-purple-500/30'} border-2 flex items-center justify-center animate-in zoom-in duration-500`}>
+                        <div className={`w-20 h-20 rounded-full bg-linear-to-br ${isFirstAttempt ? 'from-yellow-500/20 to-orange-500/20 border-yellow-500/30' : 'from-purple-500/20 to-blue-500/20 border-purple-500/30'} border-2 flex items-center justify-center animate-in zoom-in duration-500`}>
                             <Icon className={`w-10 h-10 ${message.color}`} />
                         </div>
                     </div>

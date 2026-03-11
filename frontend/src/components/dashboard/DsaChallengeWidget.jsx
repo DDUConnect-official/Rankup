@@ -20,7 +20,7 @@ const DsaChallengeWidget = ({ progress, onClick }) => {
                 {!hasStarted ? (
                     // Not Started State
                     <>
-                        <div className="flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-green-500/20 to-emerald-600/20 border border-green-500/30">
+                        <div className="flex items-center justify-center w-14 h-14 rounded-full bg-linear-to-br from-green-500/20 to-emerald-600/20 border border-green-500/30">
                             <Code2 className="w-7 h-7 text-green-400" />
                         </div>
                         <div className="flex flex-col justify-center border-l border-white/10 pl-4">
@@ -32,7 +32,7 @@ const DsaChallengeWidget = ({ progress, onClick }) => {
                     // Active State
                     <>
                         <div className="flex flex-col items-center gap-1">
-                            <div className="flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-green-500/20 to-emerald-600/20 border border-green-500/30 relative">
+                            <div className="flex items-center justify-center w-14 h-14 rounded-full bg-linear-to-br from-green-500/20 to-emerald-600/20 border border-green-500/30 relative">
                                 <Code2 className="w-7 h-7 text-green-400" />
                                 {currentStreak > 0 && (
                                     <div className="absolute -top-1 -right-1 flex items-center gap-0.5 bg-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">

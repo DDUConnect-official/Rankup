@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Bot, ChevronRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const CareerAgentCard = ({ careerModule }) => {
+    const navigate = useNavigate();
     const [currentCareerMsg, setCurrentCareerMsg] = useState(0);
 
     const careerMessages = [
@@ -68,7 +70,10 @@ const CareerAgentCard = ({ careerModule }) => {
                 </div>
 
                 {/* Glassy Shiny Button */}
-                <button className="relative overflow-hidden shrink-0 cursor-pointer px-8 py-4 rounded-xl border border-white/10 bg-black/70 backdrop-blur-sm  text-white font-bold flex items-center justify-center gap-2 group/btn transition-all active:scale-[0.98]">
+                <button
+                    onClick={() => navigate("/career-agent")}
+                    className="relative overflow-hidden shrink-0 cursor-pointer px-8 py-4 rounded-xl border border-white/10 bg-black/70 backdrop-blur-sm  text-white font-bold flex items-center justify-center gap-2 group/btn transition-all active:scale-[0.98]"
+                >
                     <span className="relative z-10 flex items-center gap-2">
                         Launch Agent
                         <Bot className="w-5 h-5 group-hover/btn:rotate-12 transition-transform" />

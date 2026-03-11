@@ -5,7 +5,7 @@ const ConfirmSubmitDialog = ({ isOpen, onClose, onConfirm, xpToEarn, isFirstAtte
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div className="fixed inset-0 z-200 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
             <div className="relative w-full max-w-md bg-[#0d0d0d] border border-white/10 rounded-xl shadow-2xl animate-in fade-in zoom-in-95 duration-200">
                 {/* Header */}
                 <div className="flex items-center justify-between p-5 border-b border-white/10">

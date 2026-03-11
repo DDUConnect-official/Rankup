@@ -10,7 +10,7 @@ const Navbar = ({ avatar, onLogout, onDelete }) => {
             <div className="backdrop-blur-2xl border border-white/5 rounded-xl px-2.5 md:px-4 flex items-center justify-between shadow-xl">
                 {/* Left: Logo */}
                 <div className="flex items-center gap-2">
-                    <img src={RankUpLogo} alt="RankUp" className="h-16 md:h-17 cursor-pointer" />
+                    <img src={RankUpLogo} alt="RankUp" className="h-16 md:h-17 cursor-pointer" onClick={() => navigate("/dashboard")} />
                 </div>
 
                 {/* Right: Profile */}

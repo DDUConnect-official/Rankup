@@ -529,7 +529,7 @@ const LevelContent = () => {
             </div>
 
             {/* AI Sidebar */}
-            <div className={`fixed inset-y-0 right-0 z-[100] lg:relative lg:z-10 transition-all duration-500 ease-in-out ${isAiSidebarOpen && !showQuiz ? 'w-full lg:w-[380px] opacity-100' : 'w-0 opacity-0 pointer-events-none'}`}>
+            <div className={`fixed inset-y-0 right-0 z-100 lg:relative lg:z-10 transition-all duration-500 ease-in-out ${isAiSidebarOpen && !showQuiz ? 'w-full lg:w-[380px] opacity-100' : 'w-0 opacity-0 pointer-events-none'}`}>
                 <AiSidebar
                     context={level?.content}
                     isOpen={isAiSidebarOpen && !showQuiz}
