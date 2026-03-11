@@ -428,31 +428,31 @@ const CareerAgent = () => {
                             </div>
 
                             {/* Chat history */}
-                            <div className="px-5 md:px-7 pt-5 pb-2 flex flex-col gap-4 max-h-130 overflow-y-auto scrollbar-thin">
+                            <div className="px-3 md:px-7 pt-4 pb-2 flex flex-col gap-4 max-h-130 overflow-y-auto scrollbar-thin">
                                 {chatHistory.map((item, idx) => (
                                     <div key={idx} className="flex flex-col gap-3">
                                         {/* User question — always on top */}
                                         {item.q !== null && (
                                             <div className="flex justify-end">
-                                                <div className="max-w-[75%] px-4 py-2.5 rounded-2xl rounded-br-sm bg-purple-600/20 border border-purple-500/20 text-white/90 text-sm">
+                                                <div className="max-w-[80%] px-3 md:px-4 py-2.5 rounded-2xl rounded-br-sm bg-purple-600/20 border border-purple-500/20 text-white/90 text-sm wrap-break-word">
                                                     {item.q}
                                                 </div>
                                             </div>
                                         )}
                                         {/* Agent reply — below the user message */}
                                         {(item.q === null || item.a !== null) && (
-                                            <div className="flex gap-3 items-start">
-                                                <div className="w-7 h-7 rounded-full border border-purple-500/30 bg-purple-500/10 flex items-center justify-center shrink-0 mt-0.5">
-                                                    <Bot className="w-3.5 h-3.5 text-purple-400" />
+                                            <div className="flex gap-2 md:gap-3 items-start">
+                                                <div className="w-6 h-6 md:w-7 md:h-7 rounded-full border border-purple-500/30 bg-purple-500/10 flex items-center justify-center shrink-0 mt-0.5">
+                                                    <Bot className="w-3 h-3 md:w-3.5 md:h-3.5 text-purple-400" />
                                                 </div>
                                                 {item.a === null ? (
-                                                    <div className="flex gap-1.5 items-center px-4 py-3.5 rounded-2xl rounded-bl-sm bg-white/5 border border-white/10">
+                                                    <div className="flex gap-1.5 items-center px-3 py-3 rounded-2xl rounded-bl-sm bg-white/5 border border-white/10">
                                                         {[0, 1, 2].map(i => (
                                                             <div key={i} className="w-1.5 h-1.5 rounded-full bg-white/40 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
                                                         ))}
                                                     </div>
                                                 ) : (
-                                                    <div className="max-w-[85%] px-4 py-3 rounded-2xl rounded-bl-sm bg-white/5 border border-white/10 text-white/75 text-sm prose prose-invert prose-p:my-1.5 prose-li:my-0.5 prose-strong:text-white/90">
+                                                    <div className="min-w-0 flex-1 px-3 md:px-4 py-3 rounded-2xl rounded-bl-sm bg-white/5 border border-white/10 text-white/75 text-sm prose prose-invert prose-p:my-1.5 prose-li:my-0.5 prose-strong:text-white/90 overflow-hidden">
                                                         <ReactMarkdown>{item.a}</ReactMarkdown>
                                                     </div>
                                                 )}
@@ -464,21 +464,21 @@ const CareerAgent = () => {
                             </div>
 
                             {/* Input row */}
-                            <div className="flex gap-2 p-5 md:p-6 pt-4">
+                            <div className="flex items-center gap-2 px-3 md:px-6 py-3 md:py-4 border-t border-white/5">
                                 <input
                                     type="text"
                                     value={question}
                                     onChange={e => setQuestion(e.target.value)}
                                     onKeyDown={e => e.key === "Enter" && handleAskFollowUp()}
-                                    placeholder="Ask anything about your career path..."
-                                    className="flex-1 px-4 py-2.5 rounded-xl bg-black/40 border border-white/10 text-white text-sm placeholder-white/25 focus:outline-none focus:border-purple-500/50 transition-colors"
+                                    placeholder="Ask your career agent..."
+                                    className="flex-1 min-w-0 px-3 md:px-4 py-2.5 rounded-xl bg-black/40 border border-white/10 text-white text-sm placeholder-white/25 focus:outline-none focus:border-purple-500/50 transition-colors"
                                 />
 
                                 {/* Voice button */}
                                 <button
                                     onClick={toggleVoice}
                                     title={isListening ? "Stop listening" : "Voice input"}
-                                    className={`relative overflow-hidden px-3 py-2.5 rounded-xl border transition-all active:scale-95 ${
+                                    className={`shrink-0 w-10 h-10 flex items-center justify-center rounded-xl border transition-all active:scale-95 ${
                                         isListening
                                             ? "border-red-500/40 bg-red-500/15 text-red-400 animate-pulse"
                                             : "border-white/10 bg-black/60 text-white/50 hover:text-white/80"
@@ -491,7 +491,7 @@ const CareerAgent = () => {
                                 <button
                                     onClick={handleAskFollowUp}
                                     disabled={!question.trim() || askingFollowUp}
-                                    className="relative overflow-hidden px-4 py-2.5 rounded-xl border border-white/10 bg-black/60 backdrop-blur-sm text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95"
+                                    className="relative overflow-hidden shrink-0 w-10 h-10 flex items-center justify-center rounded-xl border border-white/10 bg-black/60 text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95"
                                 >
                                     {askingFollowUp ? (
                                         <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
