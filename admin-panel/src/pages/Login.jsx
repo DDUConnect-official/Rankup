@@ -5,7 +5,7 @@ import { Mail, Lock, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 const Login = () => {
-    const { loginWithEmail, user, isAdmin } = useAuth();
+    const { loginWithEmail, user, isAdmin, authError, setAuthError } = useAuth();
     const navigate = useNavigate();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -17,6 +17,13 @@ const Login = () => {
             navigate("/");
         }
     }, [user, isAdmin, navigate]);
+
+    useEffect(() => {
+        if (authError) {
+            setError(authError);
+            setAuthError("");
+        }
+    }, [authError, setAuthError]);
 
     const handleLogin = async (e) => {
         e.preventDefault();

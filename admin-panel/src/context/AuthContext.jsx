@@ -9,6 +9,7 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [isAdmin, setIsAdmin] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [authError, setAuthError] = useState("");
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -18,11 +19,14 @@ export const AuthProvider = ({ children }) => {
                     if (res.data.exists && res.data.user.role === "admin") {
                         setUser(currentUser);
                         setIsAdmin(true);
+                        setAuthError("");
                     } else {
                         setUser(null);
                         setIsAdmin(false);
                         if (res.data.exists) {
-                            alert("Access Denied: You are not an admin.");
+                            setAuthError("Access Denied: You are not an admin.");
+                        } else {
+                            setAuthError("Account not found. Please contact the system administrator.");
                         }
                         signOut(auth);
                     }
@@ -30,6 +34,8 @@ export const AuthProvider = ({ children }) => {
                     console.error("Auth check error:", error);
                     setUser(null);
                     setIsAdmin(false);
+                    setAuthError("Unable to verify admin access. Please check if the server is running.");
+                    signOut(auth);
                 }
             } else {
                 setUser(null);
@@ -45,7 +51,7 @@ export const AuthProvider = ({ children }) => {
     const logout = () => signOut(auth);
 
     return (
-        <AuthContext.Provider value={{ user, isAdmin, loading, loginWithEmail, logout }}>
+        <AuthContext.Provider value={{ user, isAdmin, loading, authError, setAuthError, loginWithEmail, logout }}>
             {children}
         </AuthContext.Provider>
     );
